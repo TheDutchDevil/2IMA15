@@ -14,16 +14,19 @@ def writeLine(line, i):
         f.write(str(line)+" ")
 
 def makeDict(cont, dest): #Reads all lines from 'cont' and fits them into dict 'dest'
+	mx=0
+	counter=0
 	for text in cont:
 			l=text.split()
-			if(len(l)>1): #Avoids reading empty lines
-				dest[int(l[0])]=pnt(l[1])
-
-def pnt(p): #Shortcut function that returns a string as two points
-	y= p.split(",")
-	y[0] = float(y[0])
-	y[1] = float(y[1])
-	return y
+			if(len(l)==1) and (cont[0]==text):
+				mx=int(l[0])
+			elif(len(l)>1): #Avoids reading empty lines
+				if(counter<mx):
+					dest[counter]=[l[0], l[1]]
+					counter+=1
+	if(counter<mx):
+		print("Not enough points!")
+		dest.clear() #Don't return anything if points are insufficient
 
 def connectPoints(p): #Connects all points in p and plots them
 	for i in points:
