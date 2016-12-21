@@ -1,12 +1,9 @@
-
-#
-# This program currently only actually connects some given list of points
-#
-
 import os
 import matplotlib as sdf
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+import PolygonCreator as poly
+
 def writeLine(line, i):
     if i==1:
         f.write(str(line)+'\n')
@@ -28,30 +25,40 @@ def makeDict(cont, dest): #Reads all lines from 'cont' and fits them into dict '
 		print("Not enough points!")
 		dest.clear() #Don't return anything if points are insufficient
 
-def connectPoints(p): #Connects all points in p and plots them
-	for i in points:
-		if(i<len(points)-1):
+def connectPoints(p, c): #Connects all points in p and plots them in color c
+	for i in p:
+		if(i<len(p)-1):
 			n=i+1 #Finds the next point, loops back around to 0
 		else:
 			n=0
-		plt.plot([points[i][0], points[n][0]], [points[i][1], points[n][1]], linestyle='-', linewidth=2)
-		plt.plot(points[i][0], points[i][1],'ro')
-		plt.plot(points[n][0], points[n][1],'ro') #Points and lines use MATLAB syntax
+		plt.plot([p[i][0], p[n][0]], [p[i][1], p[n][1]], linestyle='-', linewidth=2, color=c)
+		plt.plot(p[i][0], p[i][1], c+"o")
+		plt.plot(p[n][0], p[n][1], c+"o") #Points and lines use MATLAB syntax
 
-loc = 'E:\\test\\' #Change as needed, remember to put \\ at the end
-openfile='lines.txt'
-f= open(os.path.join(loc+openfile), 'r')
-content=f.readlines()
-f.closed
+def readPoints(openfile):
+	loc = 'E:\\2IMA15\\' #Change as needed, remember to put \\ at the end
+	with open(os.path.join(loc+openfile), 'r') as f:
+		content=f.readlines()
+		f.closed
+	return content
 
-points={} #Make empty dict
-makeDict(content,points)
+minx=0
+miny=0
+maxx=15
+maxy=15
+
+readpol={} #Make empty dict
+makeDict(readPoints('lines.txt'),readpol)
+
+randpol={}
+makeDict(poly.makePolygon(8,0,15), randpol)
 
 
 plt.axes()
-plt.ylim([0,12])
-plt.xlim([0,12])
+plt.ylim([miny,maxy])
+plt.xlim([minx,maxx])
 
-connectPoints(points)
+connectPoints(readpol, "r")
+connectPoints(randpol, "b")
 
 plt.show()
