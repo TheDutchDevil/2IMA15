@@ -8,21 +8,7 @@ from VerticalDecomposition import VerticalDecomposition
 def decompose(edges):
     # Build event queue
 
-    edgesRaw = list(edges.values())
-    edgesProcessed = []
-
-    for i in range(1, len(edgesRaw), 1):
-        p1 = Vertex(int(edgesRaw[i - 1][0]), int(edgesRaw[i - 1][1]))
-        p2 = Vertex(int(edgesRaw[i][0]), int(edgesRaw[i][1]))
-
-        edgesProcessed.append(Edge(p1, p2))
-
-    p1 = Vertex(int(edgesRaw[0][0]), int(edgesRaw[0][1]))
-    p2 = Vertex(int(edgesRaw[len(edgesRaw) - 1][0]), int(edgesRaw[len(edgesRaw) - 1][1]))
-
-    edgesProcessed.append(Edge(p1, p2))
-
-    evtQ = builEventQueue(edgesProcessed)
+    evtQ = builEventQueue(edges)
     printEventQueue(evtQ)
 
     # empty status
@@ -42,26 +28,9 @@ def decompose(edges):
 
             realX = evt.cord
 
-            if not drewDecompEdge and evt.type == EventType.Insert:
-
-                upper = None
-                lower = None
-
-                try:
-                    upper = status.ceiling_item(StatusKey(evt.edge.pointAtEdge(realX).y, 0))
-                except KeyError:
-                    None
-
-                try:
-                    lower = status.floor_item(StatusKey(evt.edge.pointAtEdge(realX).y, 0))
-                except KeyError:
-                    None
-
-                if upper != None:
-                    vd.addVertEdge(Edge(evt.edge.pointAtEdge(realX), upper[1].pointAtEdge(realX)))
-
-                if lower != None:
-                    vd.addVertEdge(Edge(evt.edge.pointAtEdge(realX), lower[1].pointAtEdge(realX)))
+            if not drewDecompEdge and (evt.type == EventType.Insert):
+                attemptAddEdges(status, realX, evt.edge, vd)
+                drewDecompEdge = True
 
             if evt.type == EventType.Insert:
                 status.insert(evt.edge.statusKeyForEdge(), evt.edge)
@@ -69,13 +38,39 @@ def decompose(edges):
             if evt.type == EventType.Removal:
                 status.remove(evt.edge.statusKeyForEdge())
 
-
+        if not drewDecompEdge:
+            attemptAddEdges(status, realX, evtT[1][0].edge, vd)
+            drewDecompEdge = True
 
         print("Total status size is {}".format(len(status)))
 
     # build deco
 
     return vd
+
+
+def attemptAddEdges(status, realX, edge, vd):
+    upper = None
+    lower = None
+
+    key = StatusKey(edge.pointAtEdge(realX).y, 0)
+
+    try:
+        upper = status.ceiling_item(key)
+    except KeyError:
+        None
+
+    try:
+        lower = status.floor_item(key)
+    except KeyError:
+        None
+
+    if upper != None:
+        vd.addVertEdge(Edge(edge.pointAtEdge(realX), upper[1].pointAtEdge(realX)))
+
+    if lower != None:
+        vd.addVertEdge(Edge(edge.pointAtEdge(realX), lower[1].pointAtEdge(realX)))
+
 
 
 def builEventQueue(edges):

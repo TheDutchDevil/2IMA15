@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import PolygonCreator as poly
 import PlaneSweep as ps
+from DataStructures import Vertex, Edge
 
 
 def writeLine(line, i):
@@ -12,6 +13,28 @@ def writeLine(line, i):
     else:
         f.write(str(line) + " ")
 
+def makeEdgeList(vertices):
+
+    prevVertex = None
+
+    edges = []
+
+    for text in vertices:
+        splitLine = text.split()
+
+        if len(splitLine) == 1 and vertices[0] == text:
+            None
+        else:
+            vertex = Vertex(int(splitLine[0]), int(splitLine[1]))
+
+            if prevVertex != None:
+                edges.append(Edge(vertex, prevVertex))
+
+            prevVertex = vertex
+
+    edges.append(Edge(edges[0].p2, edges[len(edges)-1].p1))
+
+    return edges
 
 def makeDict(cont, dest):  # Reads all lines from 'cont' and fits them into dict 'dest'
     mx = 0
@@ -63,8 +86,10 @@ maxy = 15
 readpol = {}  # Make empty dict
 makeDict(readPoints('lines.txt'), readpol)
 
+edges = makeEdgeList(readPoints('lines.txt'))
+
 randpol = {}
-makeDict(poly.makePolygon(8, 0, 15), randpol)
+#makeDict(poly.makePolygon(8, 0, 15), randpol)
 
 plt.axes()
 plt.ylim([miny, maxy])
@@ -73,7 +98,7 @@ plt.xlim([minx, maxx])
 #connectPoints(readpol, "r")
 # connectPoints(randpol, "b")
 
-vd = ps.decompose(readpol)
+vd = ps.decompose(edges)
 
 showDecomp(vd)
 
