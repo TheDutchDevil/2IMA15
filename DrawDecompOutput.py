@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import PolygonCreator as poly
 import PlaneSweep as ps
-from DataStructures import Vertex, Edge
+from DataStructures import Vertex, Edge, Direction
 
 
 def writeLine(line, i):
@@ -28,11 +28,11 @@ def makeEdgeList(vertices):
             vertex = Vertex(int(splitLine[0]), int(splitLine[1]))
 
             if prevVertex != None:
-                edges.append(Edge(vertex, prevVertex))
+                edges.append(Edge(prevVertex, vertex, Direction.Right))
 
             prevVertex = vertex
 
-    edges.append(Edge(edges[0].p2, edges[len(edges)-1].p1))
+    edges.append(Edge(edges[len(edges)-1].p2, edges[0].p1, Direction.Right))
 
     return edges
 

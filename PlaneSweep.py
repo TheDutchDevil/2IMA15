@@ -1,6 +1,6 @@
 from enum import IntEnum
 from bintrees import avltree
-from DataStructures import Vertex, StatusKey
+from DataStructures import Vertex, StatusKey, Direction
 from DataStructures import Edge
 from VerticalDecomposition import VerticalDecomposition
 
@@ -65,12 +65,13 @@ def attemptAddEdges(status, realX, edge, vd):
     except KeyError:
         None
 
-    if upper != None:
-        vd.addVertEdge(Edge(edge.pointAtEdge(realX), upper[1].pointAtEdge(realX)))
+    if upper != None and ((upper[1].isLeftToRight() and upper[1].insideOn == Direction.Right) or
+                              (upper[1].isRightToLeft() and upper[1].insideOn == Direction.Left)):
+        vd.addVertEdge(Edge(edge.pointAtEdge(realX), upper[1].pointAtEdge(realX), Direction.Both))
 
-    if lower != None:
-        vd.addVertEdge(Edge(edge.pointAtEdge(realX), lower[1].pointAtEdge(realX)))
-
+    if lower != None and ((lower[1].isRightToLeft() and lower[1].insideOn == Direction.Right) or
+                              (lower[1].isLeftToRight() and lower[1].insideOn == Direction.Left)):
+        vd.addVertEdge(Edge(edge.pointAtEdge(realX), lower[1].pointAtEdge(realX), Direction.Both))
 
 
 def builEventQueue(edges):
