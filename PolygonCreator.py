@@ -29,13 +29,107 @@ def makeChallengePolygon(n, inrad, outrad, pierce=0, red=0):
 		p = random.randrange(2,len(l)-1)
 		pred = l[p-1].split()
 		succ = l[p].split()
-		print(pred)
-		print(succ)
 		v = str(math.ceil((int(pred[0])+int(succ[0]))/2))+" "+str(math.ceil((int(pred[1])+int(succ[1]))/2))
-		print(v)
 		l.insert(p, v)
 	
 	return l
+
+def makeRectangloid(x, y, size, general=0):
+#Creates x*y virtual squares of size*size and puts a point randomly in all of the 2x+2y-4 outer ones
+	l=[str(2*x+2*y-4)]
+	if(general==1):
+		xpool1=list(range(0,size))
+		xpool2=list(range(size,(x-1)*size))
+		xpool3=list(range((x-1)*size,x*size))
+		ypool1=list(range(0,size))
+		ypool2=list(range(size,(y-1)*size))
+		ypool3=list(range((y-1)*size,y*size))
+		if(x>size or y>size):
+			print("Size too small!")
+			return []
+
+	for i in range(1, y, 1):
+		ny = random.randrange((i-1)*size,(i)*size)
+
+		if(general==1):
+			nx = random.choice(xpool1)
+			xpool1.remove(nx)
+			if(i==1):
+				ypool1.remove(ny)
+			else:
+				ypool2.remove(ny)
+		else:
+			nx = random.randrange(0,size)
+		
+		l.append(str(nx)+" "+str(ny))
+
+	for i in range(1, x, 1):
+		nx = random.randrange((i-1)*size,(i)*size)
+		
+		if(general==1):
+			ny = random.choice(ypool3)
+			ypool3.remove(ny)
+			if(i==1):
+				nx = random.choice(xpool1) #Redundant
+				xpool1.remove(nx)
+			else:
+				xpool2.remove(nx)
+		else:
+			ny = (y-1)*size + random.randrange(0,size)
+		l.append(str(nx)+" "+str(ny))
+
+	for i in range(y, 1, -1):
+		if(general==1):
+			nx = random.choice(xpool3)
+			xpool3.remove(nx)
+			if(i==y):
+				ny = random.choice(ypool3)
+				ypool3.remove(ny)
+			else:
+				while True:
+					ny = random.randrange((i-1)*size,(i)*size)
+					if(ny in ypool2):
+						break
+				ypool2.remove(ny)
+		else:
+			nx =(x-1)*size + random.randrange(0,size)
+			ny = random.randrange((i-1)*size,(i)*size)
+		l.append(str(nx)+" "+str(ny))
+
+	for i in range(x, 1, -1):
+		if(general==1):
+			ny = random.choice(ypool1)
+			ypool1.remove(ny)
+			if(i==x):
+				nx = random.choice(xpool3)
+				xpool3.remove(nx)
+			else:
+				while True:
+					nx = random.randrange((i-1)*size,(i)*size)
+					if(nx in xpool2):
+						break
+				xpool2.remove(nx)
+		else:
+			nx = random.randrange((i-1)*size,(i)*size)
+			ny = random.randrange(0,size)
+		l.append(str(nx)+" "+str(ny))
+
+	#Test for general position:
+	'''
+	xs=[]
+	ys=[]
+	for e in l:
+		if(len(e.split())>1):
+			xs.append(int(e.split()[0]))
+			ys.append(int(e.split()[1]))
+	xs.sort()
+	ys.sort()
+	print(xs)
+	print(ys)
+	'''
+	return l
+	
+
 
 
 def writePoints(poly): #Writes a list poly at [output]_#####.txt with # some random characters. Could technically overwrite an older one I guess, but not likely
