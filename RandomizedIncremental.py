@@ -1,4 +1,5 @@
 from DataStructures import Vertex, Edge
+from random import shuffle
 
 def constructBoundingBox(vertices, padding = 10):
     """Constructs a bounding box around the provided list of vertices.
@@ -37,6 +38,15 @@ def constructBoundingBox(vertices, padding = 10):
     bottomRight = Vertex(xRight + padding, yBottom - padding)
     
     return BoundingBox(topLeft, topRight, bottomLeft, bottomRight)
+
+def randomize(collection):
+    """Returns a new collection containing the same data as the provided collection, but in a random order."""
+    # Copy the collection first to keep the old order intact.
+    cCollection = list(collection)
+    shuffle(cCollection)
+    
+    return cCollection
+    
 
 class BoundingBox:
     def __init__(self, topLeft, topRight, bottomLeft, bottomRight):
