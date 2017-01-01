@@ -39,7 +39,6 @@ class Edge:
     def isRightToLeft(self):
         return self.p1.x > self.p2.x
 
-
 class Vertex:
     def __init__(self, x, y):
         self.x = x
@@ -47,6 +46,21 @@ class Vertex:
 
     def __repr__(self):
         return "({}, {})".format(self.x, self.y)
+    
+    def liesAbove(self, edge):
+        if edge.isLeftToRight():
+            leftV = edge.p1
+            rightV = edge.p2
+        else:
+            leftV = edge.p2
+            rightV = edge.p1
+        
+        # Define vectors representing the edge and provided vertex.
+        ve = Vertex(rightV.x - leftV.x, rightV.y - leftV.y)
+        vv = Vertex(rightV.x - self.x, rightV.y - self.y)
+        crossProd = ve.x * vv.y - ve.y * vv.x
+        
+        return crossProd < 0
 
 
 # Used for the sweep line
