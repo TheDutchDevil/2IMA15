@@ -355,6 +355,11 @@ class Trapezoid:
                 # e.g. does not contain a vertex of the edge.
                 empty_trapezoid = Trapezoid(self.leftp, edge.getStartVertex(), self.top, self.bottom, self.neighbors_left, [])
 
+                # Replace the split trapezoid in its neighbors.
+                for neighbor in empty_trapezoid.neighbors_left:
+                    neighbor.neighbors_right.remove(self)
+                    neighbor.neighbors_right.append(empty_trapezoid)
+
                 # Construct the other trapezoid resulting from the vertical split.
                 # This trapezoid is to be split horizontally. (Note the recursive call.)
                 horizontal_split = Trapezoid(edge.getStartVertex(), self.rightp, self.top, self.bottom, [empty_trapezoid], self.neighbors_right).split(edge)
@@ -367,6 +372,11 @@ class Trapezoid:
                 # Vertically split this trapezoid such that there is an empty trapezoid.
                 # e.g. does not contain a vertex of the edge.
                 empty_trapezoid = Trapezoid(edge.getEndVertex(), self.rightp, self.top, self.bottom, [], self.neighbors_right)
+                
+                # Replace the split trapezoid in its neighbors.
+                for neighbor in empty_trapezoid.neighbors_right:
+                    neighbor.neighbors_left.remove(self)
+                    neighbor.neighbors_left.append(empty_trapezoid)
 
                 # Construct the other trapezoid resulting from the vertical split.
                 # This trapezoid is to be split horizontally. (Note the recursive call.)
@@ -410,45 +420,55 @@ class Trapezoid:
                 if not rightp_b.isVertexOf(self.bottom):
                     rightp_b = rightp_edge
 
-            # Determine the neighbors of these new trapezoids.
-            neighbors_left_t = []
-            neighbors_left_b = []
+            t_top = Trapezoid(leftp_t, rightp_t, self.top, edge, [], [])
+            t_bottom = Trapezoid(leftp_b, rightp_b, edge, self.bottom, [], [])
 
+            # Determine the neighbors of these new trapezoids.
             for neighbor in self.neighbors_left:
+                # Remove this split trapezoid from its left neighbors.
+                neighbor.neighbors_right.remove(self)
+
                 # If true, the trapezoid lies above the new edge that splits this trapezoid.
                 if neighbor.bottom.lies_above(edge) or neighbor.bottom == edge:
-                    neighbors_left_t.append(neighbor)
+                    t_top.neighbors_left.append(neighbor)
+                    neighbor.neighbors_right.append(t_top)
 
                 # If true, the trapezoid lies below the new edge that splits this trapezoid.
                 if edge.lies_above(neighbor.top) or neighbor.top == edge:
-                    neighbors_left_b.append(neighbor)
+                    t_bottom.neighbors_left.append(neighbor)
+                    neighbor.neighbors_right.append(t_bottom)
 
-                # If true, the trapezoid lies both above and below the new edge that splits this trapezoid.
+                # If the trapezoid lies both above and below the new edge.
                 if edge.lies_above(neighbor.bottom) and neighbor.top.lies_above(edge):
-                    neighbors_left_t.append(neighbor)
-                    neighbors_left_b.append(neighbor)
+                    t_top.neighbors_left.append(neighbor)
+                    t_bottom.neighbors_left.append(neighbor)
 
-            neighbors_right_t = []
-            neighbors_right_b = []
+                    neighbor.neighbors_right.append(t_top)
+                    neighbor.neighbors_right.append(t_bottom)
 
             for neighbor in self.neighbors_right:
+                # Remove this split trapezoid from its right neighbors.
+                neighbor.neighbors_left.remove(self)
+
                 # If true, the trapezoid lies above the new edge that splits this trapezoid.
                 if neighbor.bottom.lies_above(edge) or neighbor.bottom == edge:
-                    neighbors_right_t.append(neighbor)
+                    t_top.neighbors_right.append(neighbor)
+                    neighbor.neighbors_left.append(t_top)
 
                 # If true, the trapezoid lies below the new edge that splits this trapezoid.
                 if edge.lies_above(neighbor.top) or neighbor.top == edge:
-                    neighbors_right_b.append(neighbor)
+                    t_bottom.neighbors_right.append(neighbor)
+                    neighbor.neighbors_left.append(t_bottom)
 
-                # If true, the trapezoid lies both above and below the new edge that splits this trapezoid.
+                # If the trapezoid lies both above and below the new edge.
                 if edge.lies_above(neighbor.bottom) and neighbor.top.lies_above(edge):
-                    neighbors_right_t.append(neighbor)
-                    neighbors_right_b.append(neighbor)
+                    t_top.neighbors_right.append(neighbor)
+                    t_bottom.neighbors_right.append(neighbor)
 
-            return [
-                Trapezoid(leftp_t, rightp_t, self.top, edge, neighbors_left_t, neighbors_right_t),
-                Trapezoid(leftp_b, rightp_b, edge, self.bottom, neighbors_left_b, neighbors_right_b)
-            ]
+                    neighbor.neighbors_left.append(t_top)
+                    neighbor.neighbors_left.append(t_bottom)
+
+            return [t_top, t_bottom]
 
 class TrapezoidalDecomposition:
     """Contains the functions related to the trapezoidal decomposition of a simple polygon."""
