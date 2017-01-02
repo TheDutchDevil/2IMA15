@@ -1,5 +1,23 @@
 from enum import Enum
 
+class Vector:
+    """Represents a 2D vector."""
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def cross(self, vec):
+        """Returns the cross product of this vector with the provided vector."""
+        return (self.x * vec.y) - (self.y * vec.x)
+
+    def dot(self, vec):
+        """Returns the dot product of this vector with the provided vector."""
+        return (self.x * vec.x) + (self.y * vec.y)
+
+    def squired_lenth(self):
+        """Returns the squared length of the vector."""
+        return self.x^2 + self.y^2
+
 # Represents an edge from p1 to p2
 class Edge:
 
@@ -12,6 +30,12 @@ class Edge:
 
     def __repr__(self):
         return "({}, {})".format(self.p1, self.p2)
+
+    def __eq__(self, other):
+        return self.p1 == other.p1 and self.p2 == other.p2
+
+    def __ne__(self, other):
+        return not self == other
 
     def startYOfEdge(self):
         return self.p1.y if self.p1.x < self.p2.x else self.p2.y
@@ -38,6 +62,52 @@ class Edge:
 
     def isRightToLeft(self):
         return self.p1.x > self.p2.x
+    
+    def asVector(self):
+        """Returns a vector representation of this edge."""
+        return Vector(self.getEndVertex().x - self.getStartVertex().x, self.getEndVertex().y - self.getStartVertex().y)
+    
+    def intersects(self, edge):
+        """Returns true of this edge intersects with the provided edge."""
+        p = self.getStartVertex()
+        r = self.asVector()
+        
+        q = edge.getStartVertex()
+        s = edge.asVector()
+        
+        if r.cross(s) == 0:
+            return False
+        else:
+            # Define the vector between the start point p and q.
+            pq = Vector(q.x - p.x, q.y - p.y)
+        
+            # This edge has line segment p + tr
+            t = pq.cross(s) / r.cross(s)
+            
+            # The provided edge has line segment q + us
+            u = pq.cross(r) / r.cross(s)
+            
+            return 0 <= t <= 1 and 0 <= u <= 1
+    
+    def slope(self):
+        """Returns the slope of this edge or None if the edge is vertical (the slope is undefined in this case)."""
+        if self.getStartVertex().x - self.getEndVertex().x == 0:
+            return None
+        else:
+            return (self.getStartVertex().y - self.getEndVertex().y) / (self.getStartVertex().x - self.getEndVertex().x)
+    
+    def getCorrespondingYValue(self, x):
+        """
+        Returns the y-value of the corresponding x-value on this edge.
+        None is returned if this edge has no slope or the corresponding x-value is not part of this edge.
+        """
+        if self.getStartVertex().x <= x and x <= self.getEndVertex().x:
+            return self.slope() * (x - self.getStartVertex().x) + self.getStartVertex().y if self.slope() is not None else None
+        else: return None
+
+    def lies_above(self, edge):
+        """Returns true if this edge lies above the provided edge."""
+        return min(self.p1.y, self.p2.y) > min(edge.p1.y, edge.p2.y)
 
 class Vertex:
     def __init__(self, x, y):
@@ -46,22 +116,45 @@ class Vertex:
 
     def __repr__(self):
         return "({}, {})".format(self.x, self.y)
-    
-    def liesAbove(self, edge):
-        if edge.isLeftToRight():
-            leftV = edge.p1
-            rightV = edge.p2
-        else:
-            leftV = edge.p2
-            rightV = edge.p1
-        
-        # Define vectors representing the edge and provided vertex.
-        ve = Vertex(rightV.x - leftV.x, rightV.y - leftV.y)
-        vv = Vertex(rightV.x - self.x, rightV.y - self.y)
-        crossProd = ve.x * vv.y - ve.y * vv.x
-        
-        return crossProd < 0
 
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+
+    def __ne__(self, other):
+        return not self == other
+
+    def liesAbove(self, edge):
+        """Returns true if this vertex lies above the provided edge."""
+        v_e = edge.asVector()
+        v_v = Vector(self.x - edge.getEndVertex().x, self.y - edge.getEndVertex().y)
+
+        return v_e.cross(v_v) > 0
+
+    def lies_below(self, edge):
+        """Returns true if this vertex lies below the provided edge."""
+        v_e = edge.asVector()
+        v_v = Vector(self.x - edge.getEndVertex().x, self.y - edge.getEndVertex().y)
+
+        return v_e.cross(v_v) < 0
+
+    def lies_on(self, edge):
+        """Returns true if this vertex lies on the provided edge."""
+        # First, check for collinearity between the vertices.
+        v_e = edge.asVector()
+        v_vi = Vector(self.y - edge.getStartVertex().y, self.x - edge.getStartVertex().x)
+
+        if v_vi.cross(v_e) == 0:
+            # The points are collinear.
+            # It remains to check that the vertex lies between the endpoints of the edge.
+            v_v = Vector(self.x - edge.getStartVertex().x, self.y - edge.getStartVertex().y)
+            dot_product = v_v.dot(v_e)
+
+            return dot_product >= 0 and dot_product < v_e.squared_length()
+        else: return False
+
+    def isVertexOf(self, edge):
+        """Returns true if this vertex is one of the edge its endpoints."""
+        return edge.p1 == self or edge.p2 == self
 
 # Used for the sweep line
 class StatusKey:
@@ -98,3 +191,6 @@ class Direction(Enum):
     Left = 1
     Right = 2
     Both = 3
+
+    """The direction of the edge is undefined. The direction is not known."""
+    Undefined = 9
