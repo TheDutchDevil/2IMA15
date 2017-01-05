@@ -34,6 +34,65 @@ def makeChallengePolygon(n, inrad, outrad, pierce=0, red=0):
 	
 	return l
 
+def makeInputPolygon(filename, size, rndm=0):
+#Creates a polygon from text file input 
+#Line 1 will specify the starting point in the form "x y"
+#The other lines will consist of 1s and 0s
+#1s will be part of the polygon, 0s will be ignored. !!! Every 1 must only be adjacent to 2 other 1's !!! (including diagonals)
+	with open(filename, 'r') as f:
+		c=f.readlines()
+		f.closed
+	s=c[0].split()
+	print(s)
+	s[0]=int(s[0])
+	s[1]=int(s[1])
+	s[0], s[1] = s[1], s[0]
+	inp = []
+	for i in range(1, len(c)):
+		line=[]
+		strc=c[i].strip()
+		print(strc)
+		for j in strc:
+				line.append(int(j))
+		inp.append(line)
+	#print(inp)
+	#print(s)
+	#inp = [[0, 1, 0, 0, 0], [1, 0, 1, 1, 0], [1, 0, 0, 0, 1], [0, 1, 1, 1, 0]]
+	#s=[0, 1]
+	so = s
+	#for j in inp:
+	#	print(j)
+	dir = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]
+	pts = []
+	while True:
+		found=0
+		for d in dir:
+			if(s[0]+d[0] in range(len(inp)) and s[1]+d[1] in range(len(inp[0]))):
+				if (inp[s[0]+d[0]][s[1]+d[1]] == 3):
+					found=1
+
+				if (inp[s[0]+d[0]][s[1]+d[1]] == 1):
+						found=0
+						if(s==so):
+							inp[s[0]][s[1]] = 3
+						else:
+							inp[s[0]][s[1]] = 2
+						pts.append(s)
+						s = [s[0]+d[0], s[1]+d[1]]
+						break
+		if found==1:
+			pts.append(s)
+			break
+	l = [str(len(pts))]
+	for p in pts:
+		if(rndm==0):
+			l.append(str(p[1]*size)+" "+str(size*(len(inp)-1)-p[0]*size))
+		else:
+			l.append(str((p[1]-1)*size + random.randint(0, size))+" "+str(size*(len(inp)-1)-(p[0]-1)*size - random.randint(0, size)))
+	#print(l)
+	print("Done")
+	return l
+
 def makeRectangloid(x, y, size, general=0):
 #Creates x*y virtual squares of size*size and puts a point randomly in all of the 2x+2y-4 outer ones
 	l=[str(2*x+2*y-4)]
