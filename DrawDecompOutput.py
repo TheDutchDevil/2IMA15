@@ -3,7 +3,8 @@ import matplotlib as sdf
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import PolygonCreator as poly
-import PlaneSweep as ps
+#import PlaneSweep as ps
+import RandomizedIncremental as ri 
 from DataStructures import Vertex, Edge, Direction
 
 
@@ -27,7 +28,7 @@ def makeEdgeList(vertices):
         else:
             vertex = Vertex(int(splitLine[0]), int(splitLine[1]))
 
-            if prevVertex != None:
+            if prevVertex is not None:
                 edges.append(Edge(prevVertex, vertex, Direction.Right))
 
             prevVertex = vertex
@@ -87,6 +88,7 @@ readpol = {}  # Make empty dict
 makeDict(readPoints('lines.txt'), readpol)
 
 edges = makeEdgeList(readPoints('lines.txt'))
+edges = edges[:4]
 
 randpol = {}
 #makeDict(poly.makePolygon(8, 0, 15), randpol)
@@ -98,7 +100,7 @@ plt.xlim([minx, maxx])
 #connectPoints(readpol, "r")
 # connectPoints(randpol, "b")
 
-vd = ps.decompose(edges)
+vd = ri.decompose_basic(edges)
 
 showDecomp(vd)
 

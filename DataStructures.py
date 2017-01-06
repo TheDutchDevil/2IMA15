@@ -31,6 +31,9 @@ class Edge:
     def __repr__(self):
         return "({}, {})".format(self.p1, self.p2)
 
+    def __hash__(self):
+        return 17 * (hash(self.p1) + hash(self.p2))
+
     def __eq__(self, other):
         return self.p1 == other.p1 and self.p2 == other.p2
 
@@ -88,7 +91,7 @@ class Edge:
             u = pq.cross(r) / r.cross(s)
             
             return 0 <= t <= 1 and 0 <= u <= 1
-    
+
     def slope(self):
         """Returns the slope of this edge or None if the edge is vertical (the slope is undefined in this case)."""
         if self.getStartVertex().x - self.getEndVertex().x == 0:
@@ -109,6 +112,11 @@ class Edge:
         """Returns true if this edge lies above the provided edge."""
         return min(self.p1.y, self.p2.y) > min(edge.p1.y, edge.p2.y)
 
+    def has_common_vertex(self, edge):
+        """Returns true if this edge has a common vertex with the provided edge."""
+        return self.p1 == edge.p1 or self.p1 == edge.p2 or \
+               self.p2 == edge.p1 or self.p2 == edge.p2
+
 class Vertex:
     def __init__(self, x, y):
         self.x = x
@@ -116,6 +124,9 @@ class Vertex:
 
     def __repr__(self):
         return "({}, {})".format(self.x, self.y)
+
+    def __hash__(self):
+        return 19 * (hash(self.x) + hash(self.y))
 
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
@@ -139,6 +150,9 @@ class Vertex:
 
     def lies_on(self, edge):
         """Returns true if this vertex lies on the provided edge."""
+        if self.isVertexOf(edge):
+            return True
+
         # First, check for collinearity between the vertices.
         v_e = edge.asVector()
         v_vi = Vector(self.y - edge.getStartVertex().y, self.x - edge.getStartVertex().x)
