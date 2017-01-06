@@ -88,7 +88,6 @@ readpol = {}  # Make empty dict
 makeDict(readPoints('lines.txt'), readpol)
 
 edges = makeEdgeList(readPoints('lines.txt'))
-edges = edges[:4]
 
 randpol = {}
 #makeDict(poly.makePolygon(8, 0, 15), randpol)

@@ -14,7 +14,7 @@ class Vector:
         """Returns the dot product of this vector with the provided vector."""
         return (self.x * vec.x) + (self.y * vec.y)
 
-    def squired_lenth(self):
+    def squared_length(self):
         """Returns the squared length of the vector."""
         return self.x^2 + self.y^2
 
