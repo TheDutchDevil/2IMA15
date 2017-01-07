@@ -21,10 +21,12 @@ def to_output(original_edges, tss):
     """Converts the trapezoidal decomposition to the output structure."""
     decomp = vd.VerticalDecomposition()
 
-    leaves = list(tss.get_leafs())
+    leaves = tss.get_leafs()
+    trapezoids = map(lambda l: l.trapezoid(), leaves)
+    trapezoids = sorted(set(trapezoids), key=lambda t: t.leftp.x)
 
-    for i in range(0, len(leaves)):
-        trapezoid = leaves[i].trapezoid()
+    for i in range(0, len(trapezoids)):
+        trapezoid = trapezoids[i]
         print("[{}] {}".format(i, trapezoid), end='')
 
         for edge in trapezoid.edges():
@@ -41,7 +43,9 @@ def decompose_basic(edges):
     Returns the vertical decomposition.
     """
     r = ds.BoundingBox.around_edges(edges)
-    #edges = randomize(edges)
+    edges = randomize(edges)
+
+    print(edges)
 
     d = ds.TrapezoidSearchStructure.from_bounding_box(r)
 

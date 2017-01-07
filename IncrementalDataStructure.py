@@ -178,8 +178,8 @@ class Trapezoid:
         self.neighbors_right = neighbors_right
 
     def __repr__(self):
-        return "\u0394[lp {}, rp {}, top {}, btm {}]" \
-            .format(self.leftp, self.rightp, self.top, self.bottom)
+        return "\u0394{{lp {}, rp {}, top [{}], btm [{}]}} ({})" \
+            .format(self.leftp, self.rightp, self.top, self.bottom, id(self))
 
     def __hash__(self):
         return 13 * (hash(self.leftp) + hash(self.rightp) + hash(self.top) + hash(self.bottom))
@@ -329,13 +329,22 @@ class Trapezoid:
         bottom_left = bottom.getStartVertex()
         bottom_right = bottom.getEndVertex()
 
-        top_left_int = top_left.lies_on(edge)
-        top_right_int = top_right.lies_on(edge)
-        bottom_left_int = False if left is None else bottom_left.lies_on(edge)
-        bottom_right_int = False if right is None else bottom_right.lies_on(edge)
+        vertices = []
+
+        if top_left.lies_on(edge):
+            vertices.append(top_left)
+
+        if not top_right in vertices and top_right.lies_on(edge):
+            vertices.append(top_right)
+
+        if left is not None and not bottom_left in vertices and bottom_left.lies_on(edge):
+            vertices.append(bottom_left)
+
+        if right is not None and not bottom_right in vertices and bottom_right.lies_on(edge):
+            vertices.append(bottom_right)
 
         # Determine the number of vertex intersections.
-        vertex_ints = top_left_int + top_right_int + bottom_left_int + bottom_right_int
+        vertex_ints = len(vertices)
 
         if vertex_ints == 2:
             # There are two vertex intersections. There cannot be any more.

@@ -16,7 +16,7 @@ class Vector:
 
     def squared_length(self):
         """Returns the squared length of the vector."""
-        return self.x^2 + self.y^2
+        return self.x**2 + self.y**2
 
 # Represents an edge from p1 to p2
 class Edge:
@@ -155,9 +155,9 @@ class Vertex:
 
         # First, check for collinearity between the vertices.
         v_e = edge.asVector()
-        v_vi = Vector(self.y - edge.getStartVertex().y, self.x - edge.getStartVertex().x)
+        v_vi = Vector(self.x - edge.getStartVertex().x, self.y - edge.getStartVertex().y)
 
-        if v_vi.cross(v_e) == 0:
+        if v_e.cross(v_vi) == 0:
             # The points are collinear.
             # It remains to check that the vertex lies between the endpoints of the edge.
             v_v = Vector(self.x - edge.getStartVertex().x, self.y - edge.getStartVertex().y)
