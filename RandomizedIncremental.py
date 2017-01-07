@@ -263,6 +263,10 @@ class Trapezoid:
         """Returns the left top vertex of the trapezoid."""
         # Find the y-value on the top edge.
         x_left = self.leftp.x
+
+        if x_left < self.top.getStartVertex().x or self.top.getEndVertex().x < x_left:
+            raise ValueError('The left point lies outside the top edge.')
+
         y_top = self.top.getCorrespondingYValue(x_left)
 
         if y_top is None:
@@ -274,6 +278,10 @@ class Trapezoid:
         """Returns the right top vertex of the trapezoid."""
         # Find the y-value on the top edge.
         x_right = self.rightp.x
+
+        if x_right < self.top.getStartVertex().x or self.top.getEndVertex().x < x_right:
+            raise ValueError('The right point lies outside the top edge.')
+
         y_top = self.top.getCorrespondingYValue(x_right)
 
         if y_top is None:
@@ -285,6 +293,10 @@ class Trapezoid:
         """Returns the bottom left vertex of the trapezoid."""
         # Find the y-value on the bototm edge.
         x_left = self.leftp.x
+
+        if x_left < self.bottom.getStartVertex().x or self.bottom.getEndVertex().x < x_left:
+            raise ValueError('The left point lies outside the bottom edge.')
+
         y_bottom = self.bottom.getCorrespondingYValue(x_left)
 
         if y_bottom is None:
@@ -296,6 +308,10 @@ class Trapezoid:
         """Returns the bottom right vertex of the trapezoid."""
         # Find the y-value on the bottom edge.
         x_right = self.rightp.x
+
+        if x_right < self.bottom.getStartVertex().x or self.bottom.getEndVertex().x < x_right:
+            raise ValueError('The right point lies outside the bottom edge.')
+
         y_bottom = self.bottom.getCorrespondingYValue(x_right)
 
         if y_bottom is None:
@@ -423,12 +439,12 @@ class Trapezoid:
                     self.contains_vertex(edge.getEndVertex()):
                 # The trapezoid contains the whole edge.
                 # First, define the most left and most right trapezoid.
-                t_l = Trapezoid( \
-                    leftp=self.leftp, \
-                    rightp=edge.getStartVertex(), \
-                    top=self.top, \
-                    bottom=self.bottom, \
-                    neighbors_left=list(self.neighbors_left), \
+                t_l = Trapezoid(
+                    leftp=self.leftp,
+                    rightp=edge.getStartVertex(),
+                    top=self.top,
+                    bottom=self.bottom,
+                    neighbors_left=list(self.neighbors_left),
                     neighbors_right=[])
 
                 # Update the neighbors of the original trapezoid.
@@ -436,12 +452,12 @@ class Trapezoid:
                     neighbor.neighbors_right.remove(self)
                     neighbor.neighbors_right.append(t_l)
 
-                t_r = Trapezoid( \
-                    leftp=edge.getEndVertex(), \
-                    rightp=self.rightp, \
-                    top=self.top, \
-                    bottom=self.bottom, \
-                    neighbors_left=[], \
+                t_r = Trapezoid(
+                    leftp=edge.getEndVertex(),
+                    rightp=self.rightp,
+                    top=self.top,
+                    bottom=self.bottom,
+                    neighbors_left=[],
                     neighbors_right=list(self.neighbors_right))
 
                 # Update the neighbors of the original trapezoid.
@@ -450,16 +466,16 @@ class Trapezoid:
                     neighbor.neighbors_left.append(t_r)
 
                 # Next, define the trapezoids split by the edge.
-                t_t = Trapezoid( \
-                    leftp=edge.getStartVertex(), \
-                    rightp=edge.getEndVertex(), \
-                    top=self.top, \
-                    bottom=edge, \
-                    neighbors_left=[t_l], \
+                t_t = Trapezoid(
+                    leftp=edge.getStartVertex(),
+                    rightp=edge.getEndVertex(),
+                    top=self.top,
+                    bottom=edge,
+                    neighbors_left=[t_l],
                     neighbors_right=[t_r])
-                t_b = Trapezoid( \
-                    leftp=edge.getStartVertex(), \
-                    rightp=edge.getEndVertex(), \
+                t_b = Trapezoid(
+                    leftp=edge.getStartVertex(),
+                    rightp=edge.getEndVertex(),
                     top=edge,
                     bottom=self.bottom,
                     neighbors_left=[t_l],
@@ -469,14 +485,12 @@ class Trapezoid:
                 t_l.neighbors_right = [t_t, t_b]
                 t_r.neighbors_left = [t_t, t_b]
 
-                return TrapezoidSplit( \
-                    original=self, \
-                    splits=[
-                        TrapezoidEdgeSplit(t_l, TrapezoidEdgeSplitType.Left),
-                        TrapezoidEdgeSplit(t_r, TrapezoidEdgeSplitType.Right),
-                        TrapezoidEdgeSplit(t_t, TrapezoidEdgeSplitType.Top),
-                        TrapezoidEdgeSplit(t_b, TrapezoidEdgeSplitType.Bottom)
-                    ])
+                return TrapezoidSplit(
+                    original=self,
+                    top=t_t,
+                    bottom=t_b,
+                    left=t_l,
+                    right=t_r)
             else:
                 # This trapezoid has nothing to do with this edge.
                 return None
@@ -485,12 +499,12 @@ class Trapezoid:
             if self.contains_vertex(edge.getStartVertex()):
                 # Vertically split this trapezoid such that there is an empty trapezoid.
                 # e.g. does not contain a vertex of the edge.
-                empty_trapezoid = Trapezoid( \
-                    leftp=self.leftp, \
-                    rightp=edge.getStartVertex(), \
-                    top=self.top, \
-                    bottom=self.bottom, \
-                    neighbors_left=list(self.neighbors_left), \
+                empty_trapezoid = Trapezoid(
+                    leftp=self.leftp,
+                    rightp=edge.getStartVertex(),
+                    top=self.top,
+                    bottom=self.bottom,
+                    neighbors_left=list(self.neighbors_left),
                     neighbors_right=[])
 
                 # Replace the split trapezoid in its neighbors.
@@ -500,14 +514,13 @@ class Trapezoid:
 
                 # Construct the other trapezoid resulting from the vertical split.
                 # This trapezoid is to be split horizontally. (Note the recursive call.)
-                horizontal_split = \
-                    Trapezoid( \
-                        leftp=edge.getStartVertex(), \
-                        rightp=self.rightp, \
-                        top=self.top, \
-                        bottom=self.bottom, \
-                        neighbors_left=[empty_trapezoid], \
-                        neighbors_right=list(self.neighbors_right))
+                horizontal_split = Trapezoid(
+                    leftp=edge.getStartVertex(),
+                    rightp=self.rightp,
+                    top=self.top,
+                    bottom=self.bottom,
+                    neighbors_left=[empty_trapezoid],
+                    neighbors_right=list(self.neighbors_right))
 
                 # Set the right neighbor of the empty trapezoid to this new trapezoid.
                 empty_trapezoid.neighbors_right = [horizontal_split]
@@ -517,21 +530,22 @@ class Trapezoid:
                     neighbor.neighbors_left.remove(self)
                     neighbor.neighbors_left.append(horizontal_split)
 
-                horizontal_splits = horizontal_split.split(edge).splits
+                horizontal_splits = horizontal_split.split(edge)
 
-                return TrapezoidSplit( \
-                    original=self, \
-                    splits=[TrapezoidEdgeSplit(empty_trapezoid, TrapezoidEdgeSplitType.Left)] \
-                        + horizontal_splits)
+                return TrapezoidSplit(
+                    original=self,
+                    top=horizontal_splits.top,
+                    bottom=horizontal_splits.bottom,
+                    left=empty_trapezoid)
             elif self.contains_vertex(edge.getEndVertex()):
                 # Vertically split this trapezoid such that there is an empty trapezoid.
                 # e.g. does not contain a vertex of the edge.
-                empty_trapezoid = Trapezoid( \
-                    leftp=edge.getEndVertex(), \
-                    rightp=self.rightp, \
-                    top=self.top, \
-                    bottom=self.bottom, \
-                    neighbors_left=[], \
+                empty_trapezoid = Trapezoid(
+                    leftp=edge.getEndVertex(),
+                    rightp=self.rightp,
+                    top=self.top,
+                    bottom=self.bottom,
+                    neighbors_left=[],
                     neighbors_right=list(self.neighbors_right))
 
                 # Replace the split trapezoid in its neighbors.
@@ -540,14 +554,13 @@ class Trapezoid:
                     neighbor.neighbors_left.append(empty_trapezoid)
 
                 # Construct the other trapezoid resulting from the vertical split.
-                horizontal_split = \
-                    Trapezoid( \
-                        leftp=self.leftp, \
-                        rightp=edge.getEndVertex(), \
-                        top=self.top, \
-                        bottom=self.bottom, \
-                        neighbors_left=list(self.neighbors_left), \
-                        neighbors_right=[empty_trapezoid])
+                horizontal_split = Trapezoid(
+                    leftp=self.leftp,
+                    rightp=edge.getEndVertex(),
+                    top=self.top,
+                    bottom=self.bottom,
+                    neighbors_left=list(self.neighbors_left),
+                    neighbors_right=[empty_trapezoid])
 
                 # Set the left neighbor of the empty trapezoid to this new trapezoid.
                 empty_trapezoid.neighbors_left = [horizontal_split]
@@ -558,12 +571,13 @@ class Trapezoid:
                     neighbor.neighbors_right.append(horizontal_split)
 
                 # This trapezoid is to be split horizontally. (Note the recursive call.)
-                horizontal_splits = horizontal_split.split(edge).splits
+                horizontal_splits = horizontal_split.split(edge)
 
-                return TrapezoidSplit( \
-                    original=self, \
-                    splits=[TrapezoidEdgeSplit(empty_trapezoid, TrapezoidEdgeSplitType.Right)] \
-                        + horizontal_splits)
+                return TrapezoidSplit(
+                    original=self,
+                    top=horizontal_splits.top,
+                    bottom=horizontal_splits.bottom,
+                    right=empty_trapezoid)
             else:
                 # There is only an intersection with an vertex, do nothing.
                 return None
@@ -662,12 +676,10 @@ class Trapezoid:
                         neighbor.neighbors_left.append(t_bottom)
                         t_bottom.neighbors_right.append(neighbor)
 
-            return TrapezoidSplit( \
-                original=self, \
-                splits=[
-                    TrapezoidEdgeSplit(t_top, TrapezoidEdgeSplitType.Top),
-                    TrapezoidEdgeSplit(t_bottom, TrapezoidEdgeSplitType.Bottom)
-                ])
+            return TrapezoidSplit(
+                original=self,
+                top=t_top,
+                bottom=t_bottom)
 
     @staticmethod
     def split_all(trapezoids, edge):
@@ -684,6 +696,63 @@ class Trapezoid:
                 result.append(splitted)
 
         return result
+
+    def can_merge(self, other):
+        """
+        Returns true if this trapezoid can be merged with the other trapezoid.
+        Otherwise false is returned.
+        """
+        # They both need to have the same top and bottom edge.
+        if self.top == other.top and self.bottom == other.bottom:
+            # Check that they trapezoids are each others only neighbors.
+            if len(self.neighbors_left) == 1 and other in self.neighbors_left and \
+                    len(other.neighbors_right) == 1 and self in other.neighbors_right:
+                # Verify whether the edge between them if fake.
+                return (not self.top_left().isVertexOf(self.top)) and \
+                    (not self.bottom_left().isVertexOf(self.bottom))
+            elif len(self.neighbors_right) == 1 and other in self.neighbors_right and \
+                    len(other.neighbors_left) == 1 and self in other.neighbors_left:
+                # Verify whether the edge between them if fake.
+                return (not self.top_right().isVertexOf(self.top)) and \
+                    (not self.bottom_right().isVertexOf(self.bottom))
+
+        return False
+
+    def merge(self, other):
+        """
+        Merges this trapezoid with the provided trapezoid if possible.
+        If the merge was performed, then the merged trapezoid is returned.
+        Otherwise None is returned.
+        """
+        if self.can_merge(other):
+            if other in self.neighbors_left:
+                t_left = other
+                t_right = self
+            else:
+                t_left = self
+                t_right = other
+
+            # Note that the top and bottom edge are the same for both trapezoids.
+            merged = Trapezoid(
+                leftp=t_left.leftp,
+                rightp=t_right.rightp,
+                top=self.top,
+                bottom=self.bottom,
+                neighbors_left=list(t_left.neighbors_left),
+                neighbors_right=list(t_right.neighbors_right))
+
+            # Update the neighbors after the merge.
+            for neighbor_left in merged.neighbors_left:
+                neighbor_left.neighbors_right.remove(t_left)
+                neighbor_left.neighbors_right.append(merged)
+
+            for neighbor_right in merged.neighbors_right:
+                neighbor_right.neighbors_left.remove(t_right)
+                neighbor_right.neighbors_left.append(merged)
+
+            return merged
+        else:
+            return None
 
 class BoundingBox(Trapezoid):
     """Represents a bounding box around a set of vertices."""
@@ -749,237 +818,93 @@ class BoundingBox(Trapezoid):
 
         return BoundingBox.around_vertices(vertices, padding)
 
-class TrapezoidEdgeSplitType(Enum):
-    """Defines the different type of trapezoidal splits due to an edge."""
-    Left = 1, """This trapezoid is the left part of the original trapezoid after the split."""
-    Right = 2, """This trapezoid is the right part of the original trapezoid after the split."""
-    Top = 3, """This trapezoid is the top part of the original trapezoid after the split."""
-    Bottom = 4, """This trapezoid is the bottom part of the original trapezoid after the split."""
-
 class TrapezoidSplit:
     """
     This class represents an original trapezoid along with sub-trapezoids that
     were created due to the split of this original trapezoid.
     """
-    def __init__(self, original, splits):
+    def __init__(self, original, top, bottom, left=None, right=None):
         self.original = original
-        self.splits = splits
-
-        # TODO: Would be nicer to define the 4 splits and make None if not applicable.
-
-    def left_split(self):
-        """Returns the left split of this trapezoid split or None if there isn't any."""
-        for split in self.splits:
-            if split.split_type == TrapezoidEdgeSplitType.Left:
-                return split
-
-        return None
-
-    def top_split(self):
-        """Returns the top split of this trapezoid split or None if there isn't any."""
-        for split in self.splits:
-            if split.split_type == TrapezoidEdgeSplitType.Top:
-                return split
-
-        return None
-
-    def right_split(self):
-        """Returns the right split of this trapezoid split or None if there isn't any."""
-        for split in self.splits:
-            if split.split_type == TrapezoidEdgeSplitType.Right:
-                return split
-
-        return None
-
-    def bottom_split(self):
-        """Returns the bottom split of this trapezoid split or None if there isn't any."""
-        for split in self.splits:
-            if split.split_type == TrapezoidEdgeSplitType.Bottom:
-                return split
-
-        return None
-
-    def has_left_split(self):
-        """Returns true if this trapezoid split has a left split. Otherwise false."""
-        return self.left_split() is not None
-
-    def has_right_split(self):
-        """Returns true if this trapezoid split has a right split. Otherwise false."""
-        return self.right_split() is not None
+        self.top = top
+        self.bottom = bottom
+        self.left = left
+        self.right = right
 
     def as_search_structure(self, edge):
         """Returns the search structure for this trapezoid split."""
-        t_top = self.top_split().new
-        t_bottom = self.bottom_split().new
+        sub_tree = TrapezoidSearchStructure(
+            root=YNode(edge),
+            left=TrapezoidSearchStructure(TrapezoidLeaf(self.bottom)),
+            right=TrapezoidSearchStructure(TrapezoidLeaf(self.top)))
 
-        sub_tree = TrapezoidSearchStructure( \
-            root=YNode(edge), \
-            left=TrapezoidSearchStructure(TrapezoidLeaf(t_bottom)), \
-            right=TrapezoidSearchStructure(TrapezoidLeaf(t_top)))
+        if self.right is not None:
+            sub_tree = TrapezoidSearchStructure(
+                root=XNode(edge.getEndVertex()),
+                left=sub_tree,
+                right=TrapezoidSearchStructure(TrapezoidLeaf(self.right)))
 
-        if self.has_left_split() and self.has_right_split():
-            t_left = self.left_split().new
-            t_right = self.right_split().new
-
-            return TrapezoidSearchStructure( \
-                root=XNode(edge.getStartVertex()), \
-                left=TrapezoidSearchStructure(TrapezoidLeaf(t_left)), \
-                right=TrapezoidSearchStructure( \
-                    root=XNode(edge.getEndVertex()), \
-                    left=sub_tree, \
-                    right=TrapezoidSearchStructure(TrapezoidLeaf(t_right))))
-        elif self.has_left_split():
-            t_left = self.left_split().new
-
-            return TrapezoidSearchStructure( \
-                root=XNode(edge.getStartVertex()), \
-                left=TrapezoidSearchStructure(TrapezoidLeaf(t_left)), \
+        if self.left is not None:
+            sub_tree = TrapezoidSearchStructure(
+                root=XNode(edge.getStartVertex()),
+                left=TrapezoidSearchStructure(TrapezoidLeaf(self.left)),
                 right=sub_tree)
-        elif self.has_right_split():
-            t_right = self.right_split().new
 
-            return TrapezoidSearchStructure( \
-                root=XNode(edge.getEndVertex()), \
-                left=sub_tree, \
-                right=TrapezoidSearchStructure(TrapezoidLeaf(t_right)))
-        else:
-            return sub_tree
+        return sub_tree
 
     @staticmethod
     def merge(trapezoid_splits):
         """
         Merges the provided splitted trapezoids. Note that the provided collection is changed.
         """
+        if len(trapezoid_splits) < 1:
+            return
+
         # Keep track of the top merge process.
-        t_top = None
-        t_top_merging = []
+        t_top = trapezoid_splits[0].top
+        t_top_merging = [trapezoid_splits[0]]
 
         # Keep track of the bottom merge process.
-        t_bottom = None
-        t_bottom_merging = []
+        t_bottom = trapezoid_splits[0].bottom
+        t_bottom_merging = [trapezoid_splits[0]]
 
-        for t_split in trapezoid_splits:
-            for split in t_split.splits:
-                if split.split_type is TrapezoidEdgeSplitType.Top:
-                    # This is the top of an origianl trapezoid.
-                    if t_top is not None:
-                        # If a top is already saved, try to merge it.
-                        merged = t_top.merge_if_possible(split)
+        # Inline functions to process the accumulated merge data.
+        def save_top_merges():
+            """Processes the accummulated top trapezoid merges."""
+            for merging in t_top_merging:
+                merging.top = t_top
 
-                        if merged is not None:
-                            # If the merge succeeded, then continue.
-                            t_top = TrapezoidEdgeSplit(merged, TrapezoidEdgeSplitType.Top)
-                            t_top_merging.append(split)
-                        else:
-                            # The merge has failed, process accummulated trapezoids.
-                            for merging in t_top_merging:
-                                merging.new = t_top.new
+        def save_bottom_merges():
+            """Processes the accumulated bottom trapezoid merges."""
+            for merging in t_bottom_merging:
+                merging.bottom = t_bottom
 
-                            # Re-initialize the top merge data.
-                            t_top = split
-                            t_top_merging = [split]
-                    else:
-                        # There is no top yet, initialize.
-                        t_top = split
-                        t_top_merging = [split]
-                elif split.split_type is TrapezoidEdgeSplitType.Bottom:
-                    # This is the bottom of an origianl trapezoid.
-                    if t_bottom is not None:
-                        # If a bottom is already saved, try to merge it.
-                        merged = t_bottom.merge_if_possible(split)
+        # Process each trapezoidal split.
+        for i in range(1, len(trapezoid_splits)):
+            cur_split = trapezoid_splits[i]
 
-                        if merged is not None:
-                            # If the merge succeeded, then continue.
-                            t_bottom = TrapezoidEdgeSplit(merged, TrapezoidEdgeSplitType.Bottom)
-                            t_bottom_merging.append(split)
-                        else:
-                            # The merge has failed, process accummulated trapezoids.
-                            for merging in t_bottom_merging:
-                                merging.new = t_bottom.new
+            if t_top.can_merge(cur_split.top):
+                t_top = t_top.merge(cur_split.top)
+                t_top_merging.append(cur_split)
+            else:
+                save_top_merges()
 
-                            # Re-initialize the bottom merge data.
-                            t_bottom = split
-                            t_bottom_merging = [split]
-                    else:
-                        # There is no bottom yet, initialize.
-                        t_bottom = split
-                        t_bottom_merging = [split]
+                # Re-initialize the top merge data.
+                t_top = cur_split.top
+                t_top_merging = [cur_split]
+
+            if t_bottom.can_merge(cur_split.bottom):
+                t_bottom = t_bottom.merge(cur_split.bottom)
+                t_bottom_merging.append(cur_split)
+            else:
+                save_bottom_merges()
+
+                # Re-initialize the bottom merge data.
+                t_bottom = cur_split.bottom
+                t_bottom_merging = [cur_split]
 
         # Process any merge that is still going on.
-        for merging in t_top_merging:
-            merging.new = t_top.new
-
-        for merging in t_bottom_merging:
-            merging.new = t_bottom.new
-
-class TrapezoidEdgeSplit:
-    """
-    This class represents the split of a trapezoid that. The split type of this class
-    indicates which part of the original trapezoid the sub-trapezoid represents.
-    """
-    def __init__(self, new, split_type):
-        self.new = new
-        self.split_type = split_type
-
-    def can_merge(self, trapezoid_split):
-        """
-        Returns true if this trapezoid split can be merged with the specified trapezoid split.
-        Otherwise false is returned.
-        """
-        t_self = self.new
-        t_other = trapezoid_split.new
-
-        # They both need to have the same top and bottom edge.
-        if t_self.top == t_other.top and t_self.bottom == t_other.bottom:
-            # Check that they trapezoids are each others only neighbors.
-            if len(t_self.neighbors_left) == 1 and t_other in t_self.neighbors_left and \
-                    len(t_other.neighbors_right) == 1 and t_self in t_other.neighbors_right:
-                # Verify whether the edge between them if fake.
-                return (not t_self.top_left().isVertexOf(t_self.top)) and \
-                    (not t_self.bottom_left().isVertexOf(t_self.bottom))
-            elif len(t_self.neighbors_right) == 1 and t_other in t_self.neighbors_right and \
-                    len(t_other.neighbors_left) == 1 and t_self in t_other.neighbors_left:
-                # Verify whether the edge between them if fake.
-                return (not t_self.top_right().isVertexOf(t_self.top)) and \
-                    (not t_self.bottom_right().isVertexOf(t_self.bottom))
-
-        return False
-
-    def merge_if_possible(self, trapezoid_split):
-        """
-        Merges this trapezoid with the provided trapezoid if possible.
-        If the merge was performed, then the merged trapezoid is returned.
-        Otherwise None is returned.
-        """
-        if self.can_merge(trapezoid_split):
-            if trapezoid_split.new in self.new.neighbors_left:
-                t_left = trapezoid_split.new
-                t_right = self.new
-            else:
-                t_left = self.new
-                t_right = trapezoid_split.new
-
-            # Note that the top and bottom edge are the same for both trapezoids.
-            merged = Trapezoid( \
-                leftp=t_left.leftp, \
-                rightp=t_right.rightp, \
-                top=self.new.top, \
-                bottom=self.new.bottom, \
-                neighbors_left=list(t_left.neighbors_left), \
-                neighbors_right=list(t_right.neighbors_right))
-
-            # Update the neighbors after the merge.
-            for neighbor_left in merged.neighbors_left:
-                neighbor_left.neighbors_right.remove(t_left)
-                neighbor_left.neighbors_right.append(merged)
-
-            for neighbor_right in merged.neighbors_right:
-                neighbor_right.neighbors_left.remove(t_right)
-                neighbor_right.neighbors_left.append(merged)
-
-            return merged
-        else:
-            return None
+        save_top_merges()
+        save_bottom_merges()
 
 class TrapezoidalDecomposition:
     """Contains the functions related to the trapezoidal decomposition of a simple polygon."""
@@ -1060,7 +985,7 @@ def decompose_basic(edges):
     Returns the vertical decomposition.
     """
     r = BoundingBox.around_edges(edges)
-    edges = randomize(edges)
+    #edges = randomize(edges)
 
     d = TrapezoidSearchStructure.from_bounding_box(r)
 
