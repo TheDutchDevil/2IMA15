@@ -178,7 +178,7 @@ class Trapezoid:
         self.neighbors_right = neighbors_right
 
     def __repr__(self):
-        return "\u0394{{lp {}, rp {}, top [{}], btm [{}]}} ({})" \
+        return "/\{{lp {}, rp {}, top [{}], btm [{}]}} ({})" \
             .format(self.leftp, self.rightp, self.top, self.bottom, id(self))
 
     def __hash__(self):
@@ -856,7 +856,7 @@ class TrapezoidalDecomposition:
         left_start -- The most left trapezoid that is intersected by the edge.
         edge -- The edge for which the trapezoidal intersections are to be determined.
         """
-        intersections = list(left_start)
+        intersections = list()
         neighbors = list(left_start)
 
         for neighbor in neighbors:
@@ -865,14 +865,14 @@ class TrapezoidalDecomposition:
                     neighbors.remove(neighbor2)
 
         for neighbor in neighbors:
-            if neighbor.is_intersected_by(edge):
+            if neighbor.is_intersected_by(edge) or neighbor.contains_vertex(edge.getStartVertex()):
                 intersections.append(neighbor)
 
                 for neighbor_right in neighbor.neighbors_right:
                     if neighbor_right not in neighbors:
                         neighbors.append(neighbor_right)
 
-        return list(set(intersections))
+        return list(intersections)
 
     @staticmethod
     def insert(ss_d, edge):
@@ -889,9 +889,7 @@ class TrapezoidalDecomposition:
         int_trapezoid_leaves = ss_d.point_location_query(edge.getStartVertex())
 
         # Get the trapezoids from the leaves.
-        int_trapezoids = []
-        for int_trapezoid_leave in int_trapezoid_leaves:
-            int_trapezoids.append(int_trapezoid_leave.trapezoid())
+        int_trapezoids = [int_t.trapezoid() for int_t in int_trapezoid_leaves]
 
         t_intersections = TrapezoidalDecomposition.find_intersections(int_trapezoids, edge)
 
