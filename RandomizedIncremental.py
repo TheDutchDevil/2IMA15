@@ -423,8 +423,31 @@ class Trapezoid:
                     self.contains_vertex(edge.getEndVertex()):
                 # The trapezoid contains the whole edge.
                 # First, define the most left and most right trapezoid.
-                t_l = Trapezoid(self.leftp, edge.getStartVertex(), self.top, self.bottom, [], [])
-                t_r = Trapezoid(edge.getEndVertex(), self.rightp, self.top, self.bottom, [], [])
+                t_l = Trapezoid( \
+                    leftp=self.leftp, \
+                    rightp=edge.getStartVertex(), \
+                    top=self.top, \
+                    bottom=self.bottom, \
+                    neighbors_left=list(self.neighbors_left), \
+                    neighbors_right=[])
+
+                # Update the neighbors of the original trapezoid.
+                for neighbor in t_l.neighbors_left:
+                    neighbor.neighbors_right.remove(self)
+                    neighbor.neighbors_right.append(t_l)
+
+                t_r = Trapezoid( \
+                    leftp=edge.getEndVertex(), \
+                    rightp=self.rightp, \
+                    top=self.top, \
+                    bottom=self.bottom, \
+                    neighbors_left=[], \
+                    neighbors_right=list(self.neighbors_right))
+
+                # Update the neighbors of the original trapezoid.
+                for neighbor in t_r.neighbors_right:
+                    neighbor.neighbors_left.remove(self)
+                    neighbor.neighbors_left.append(t_r)
 
                 # Next, define the trapezoids split by the edge.
                 t_t = Trapezoid( \
@@ -445,15 +468,6 @@ class Trapezoid:
                 # Define the neighbors of the most left and right trapezoid.
                 t_l.neighbors_right = [t_t, t_b]
                 t_r.neighbors_left = [t_t, t_b]
-
-                # Update the neighbors of the original trapezoid.
-                for neighbor in self.neighbors_left:
-                    neighbor.neighbors_right.remove(self)
-                    neighbor.neighbors_right.append(t_l)
-
-                for neighbor in self.neighbors_right:
-                    neighbor.neighbors_left.remove(self)
-                    neighbor.neighbors_left.append(t_r)
 
                 return TrapezoidSplit( \
                     original=self, \
@@ -476,7 +490,7 @@ class Trapezoid:
                     rightp=edge.getStartVertex(), \
                     top=self.top, \
                     bottom=self.bottom, \
-                    neighbors_left=self.neighbors_left, \
+                    neighbors_left=list(self.neighbors_left), \
                     neighbors_right=[])
 
                 # Replace the split trapezoid in its neighbors.
@@ -493,7 +507,7 @@ class Trapezoid:
                         top=self.top, \
                         bottom=self.bottom, \
                         neighbors_left=[empty_trapezoid], \
-                        neighbors_right=self.neighbors_right)
+                        neighbors_right=list(self.neighbors_right))
 
                 # Set the right neighbor of the empty trapezoid to this new trapezoid.
                 empty_trapezoid.neighbors_right = [horizontal_split]
@@ -518,7 +532,7 @@ class Trapezoid:
                     top=self.top, \
                     bottom=self.bottom, \
                     neighbors_left=[], \
-                    neighbors_right=self.neighbors_right)
+                    neighbors_right=list(self.neighbors_right))
 
                 # Replace the split trapezoid in its neighbors.
                 for neighbor in empty_trapezoid.neighbors_right:
@@ -532,7 +546,7 @@ class Trapezoid:
                         rightp=edge.getEndVertex(), \
                         top=self.top, \
                         bottom=self.bottom, \
-                        neighbors_left=self.neighbors_left, \
+                        neighbors_left=list(self.neighbors_left), \
                         neighbors_right=[empty_trapezoid])
 
                 # Set the left neighbor of the empty trapezoid to this new trapezoid.
@@ -951,8 +965,8 @@ class TrapezoidEdgeSplit:
                 rightp=t_right.rightp, \
                 top=self.new.top, \
                 bottom=self.new.bottom, \
-                neighbors_left=t_left.neighbors_left, \
-                neighbors_right=t_right.neighbors_right)
+                neighbors_left=list(t_left.neighbors_left), \
+                neighbors_right=list(t_right.neighbors_right))
 
             # Update the neighbors after the merge.
             for neighbor_left in merged.neighbors_left:
@@ -1046,7 +1060,7 @@ def decompose_basic(edges):
     Returns the vertical decomposition.
     """
     r = BoundingBox.around_edges(edges)
-    #edges = randomize(edges)
+    edges = randomize(edges)
 
     d = TrapezoidSearchStructure.from_bounding_box(r)
 
