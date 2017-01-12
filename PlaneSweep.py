@@ -22,15 +22,18 @@ def decompose(edges):
     while len(evtQ) > 1:
         evtT = evtQ.pop_min()
 
-        drewDecompEdge = False
+        edgePoints = {}
+
+        if len(evtT[1]) > 2:
+            print("Degenerate case, multiple vertices on a vertical line!!!111!!!!1!!1!")
 
         for evt in evtT[1]:
 
             realX = evt.cord
 
-            if not drewDecompEdge and (evt.type == EventType.Insert):
-                attemptAddEdges(status, realX, evt.edge, vd)
-                drewDecompEdge = True
+            realY = evt.edge.pointAtEdge(realX).y
+
+            edgePoints[realY] = evt.edge
 
             if evt.type == EventType.Insert:
                 status.insert(evt.edge.statusKeyForEdge(), evt.edge)
@@ -38,9 +41,7 @@ def decompose(edges):
             if evt.type == EventType.Removal:
                 status.remove(evt.edge.statusKeyForEdge())
 
-        if not drewDecompEdge:
-            attemptAddEdges(status, realX, evtT[1][0].edge, vd)
-            drewDecompEdge = True
+        attemptAddEdges(status, realX, edgePoints, vd)
 
         print("Total status size is {}".format(len(status)))
 
@@ -49,29 +50,37 @@ def decompose(edges):
     return vd
 
 
-def attemptAddEdges(status, realX, edge, vd):
+def attemptAddEdges(status, realX, edgePoints, vd):
     upper = None
     lower = None
 
-    key = StatusKey(edge.pointAtEdge(realX).y, 0)
+    for key in edgePoints:
+        edge = edgePoints[key]
+        status.insert(edge.statusKeyForEdge(), edge)
 
-    try:
-        upper = status.ceiling_item(key)
-    except KeyError:
-        None
+    for dKey in edgePoints:
 
-    try:
-        lower = status.floor_item(key)
-    except KeyError:
-        None
+        edge = edgePoints[dKey]
 
-    if upper != None and ((upper[1].isLeftToRight() and upper[1].insideOn == Direction.Right) or
-                              (upper[1].isRightToLeft() and upper[1].insideOn == Direction.Left)):
-        vd.addVertEdge(Edge(edge.pointAtEdge(realX), upper[1].pointAtEdge(realX), Direction.Both))
+        key = edge.statusKeyForEdge()
 
-    if lower != None and ((lower[1].isRightToLeft() and lower[1].insideOn == Direction.Right) or
-                              (lower[1].isLeftToRight() and lower[1].insideOn == Direction.Left)):
-        vd.addVertEdge(Edge(edge.pointAtEdge(realX), lower[1].pointAtEdge(realX), Direction.Both))
+        try:
+            upper = status.succ_item(key)
+        except KeyError:
+            None
+
+        try:
+            lower = status.prev_item(key)
+        except KeyError:
+            None
+
+        if upper is not None and ((upper[1].isLeftToRight() and upper[1].insideOn == Direction.Right) or
+                                      (upper[1].isRightToLeft() and upper[1].insideOn == Direction.Left)):
+            vd.addVertEdge(Edge(edge.pointAtEdge(realX), upper[1].pointAtEdge(realX), Direction.Both))
+
+        if lower is not None and ((lower[1].isRightToLeft() and lower[1].insideOn == Direction.Right) or
+                                      (lower[1].isLeftToRight() and lower[1].insideOn == Direction.Left)):
+            vd.addVertEdge(Edge(edge.pointAtEdge(realX), lower[1].pointAtEdge(realX), Direction.Both))
 
 
 def builEventQueue(edges):
@@ -97,10 +106,7 @@ def builEventQueue(edges):
             evts.append(evt)
         else:
             if len(evts) > 0:
-                if type == EventType.Insert:
-                    tree.insert(cord, evts)
-                else:
-                    tree.insert(cord, evts)
+                tree.insert(cord, evts)
 
             evts = []
 
