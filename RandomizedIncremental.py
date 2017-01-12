@@ -2,6 +2,7 @@
 A module containing functions and classes related to the randomized incremental algorithm
 that creates a trapezoidal deconstruction of a simple polygon.
 """
+from math import floor, sqrt, log
 from random import shuffle
 import IncrementalDataStructure as ds
 import VerticalDecomposition as vd
@@ -17,12 +18,10 @@ def randomize(collection):
 
     return c_collection
 
-def to_output(original_edges, tss):
+def to_output(original_edges, trapezoids):
     """Converts the trapezoidal decomposition to the output structure."""
     decomp = vd.VerticalDecomposition()
 
-    leaves = tss.get_leafs()
-    trapezoids = map(lambda l: l.trapezoid(), leaves)
     trapezoids = sorted(set(trapezoids), key=lambda t: t.leftp.x)
 
     for i in range(0, len(trapezoids)):
@@ -50,7 +49,29 @@ def decompose_basic(edges):
     d = ds.TrapezoidSearchStructure.from_bounding_box(r)
 
     for edge in edges:
+
+        if edge.is_vertical():
+            raise ValueError("Vertical edges are not supported. Edge: {}".format(edge))
+
         t_new = ds.TrapezoidalDecomposition.insert(d, edge)
         ds.TrapezoidSearchStructure.insert(t_new, edge)
 
-    return to_output(edges, d)
+    return [l.trapezoid() for l in d.get_leafs()]
+
+def N(h):
+    return 2**(h**2)
+
+'''
+def decompose_improved(edges):
+
+    r = ds.BoundingBox.around_edges(edges)
+    edges = randomize(edges)
+
+    print(edges)
+
+    d = ds.TrapezoidSearchStructure.from_bounding_box(r)
+
+    for h in range(0, floor(sqrt(log(len(edges))))):
+        for i in range(N(h-1) + 1, N(h)):
+             
+'''
