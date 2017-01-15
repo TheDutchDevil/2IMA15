@@ -141,6 +141,9 @@ class TrapezoidSearchStructure:
         """Replaces this search structure with the provided one."""
         if isinstance(self.root, TrapezoidLeaf):
             self.root.trapezoid()._nodes.remove(self)
+        if isinstance(tss.root, TrapezoidLeaf):
+            tss.root.trapezoid()._nodes.remove(tss)
+            tss.root.trapezoid()._nodes.append(self)
 
         tss.root._parent = self.root._parent
         self.root._parent = None

@@ -102,7 +102,7 @@ class Edge:
 
     def is_vertical(self):
         """Returns true if this edge is vertical. Otherwise false is returned."""
-        return self.slope() == 0
+        return self.p1.x == self.p2.x
 
     def getCorrespondingYValue(self, x):
         """
@@ -126,6 +126,17 @@ class Edge:
     def lies_above(self, edge):
         """Returns true if this edge lies above the provided edge."""
         return min(self.p1.y, self.p2.y) > min(edge.p1.y, edge.p2.y)
+
+    def angle(self, edge):
+        """Returns the angle between this edge and the provided edge."""
+        angle1 = math.atan2( \
+            self.getStartVertex().y - self.getEndVertex().y, \
+            self.getStartVertex().x - self.getEndVertex().x)
+        angle2 = math.atan2( \
+            edge.getStartVertex().y - edge.getEndVertex().y, \
+            edge.getStartVertex().x - edge.getEndVertex().x)
+
+        return math.fabs(angle1) - math.fabs(angle2)
 
     def has_common_vertex(self, edge):
         """Returns true if this edge has a common vertex with the provided edge."""
