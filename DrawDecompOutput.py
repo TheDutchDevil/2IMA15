@@ -1,10 +1,14 @@
 import os
+from statistics import mean
+
 import matplotlib as sdf
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+import time
+
 import PolygonCreator as poly
-#import PlaneSweep as ps
-import RandomizedIncremental as ri 
+import PlaneSweep as ps
+import RandomizedIncremental as ri
 from DataStructures import Vertex, Edge, Direction
 
 
@@ -14,8 +18,8 @@ def writeLine(line, i):
     else:
         f.write(str(line) + " ")
 
-def makeEdgeList(vertices):
 
+def makeEdgeList(vertices):
     prevVertex = None
 
     edges = []
@@ -33,9 +37,10 @@ def makeEdgeList(vertices):
 
             prevVertex = vertex
 
-    edges.append(Edge(edges[len(edges)-1].p2, edges[0].p1, Direction.Right))
+    edges.append(Edge(edges[len(edges) - 1].p2, edges[0].p1, Direction.Right))
 
     return edges
+
 
 def makeDict(cont, dest):  # Reads all lines from 'cont' and fits them into dict 'dest'
     mx = 0
@@ -63,12 +68,13 @@ def connectPoints(p, c):  # Connects all points in p and plots them in color c
         plt.plot(p[i][0], p[i][1], c + "o")
         plt.plot(p[n][0], p[n][1], c + "o")  # Points and lines use MATLAB syntax
 
+
 def showDecomp(p):
     for tuple in p.edges:
         edge = tuple[0]
         plt.plot([edge.getStartVertex().x, edge.getEndVertex().x],
-                 [edge.getStartVertex().y, edge.getEndVertex().y], linestyle="-", linewidth = 2, color="r" if tuple[1] else "g")
-
+                 [edge.getStartVertex().y, edge.getEndVertex().y], linestyle="-", linewidth=2,
+                 color="r" if tuple[1] else "g")
 
 
 def readPoints(openfile):
@@ -78,7 +84,45 @@ def readPoints(openfile):
         f.closed
     return content
 
+baseN = 700
+'''
+for i in range(0,7):
+    for j in range(0,3):
+        n = baseN*pow(2, i)
+        poly.writePoints(poly.makeRectangloid(int(n/4 + 1), int(n/4 + 1), int(n * 1.25), general=2),
+                         "testSuite/testSuite{}_{}".format(n, j))
 
+'''
+
+
+res = {}
+
+for filename in os.listdir("testsuite"):
+    filename = "testsuite/" + filename
+    edges = makeEdgeList(readPoints(filename))
+
+    print("Doing file {}".format(filename))
+
+    with open(filename, 'r') as f:
+        n = int(f.readline())
+
+    if not n in res:
+        res[n] = []
+
+    for i in range(0, 10):
+        start = time.time()
+
+        ri.decompose_basic(edges)
+
+        stop = time.time()
+
+        res[n].append((stop-start)*1000.0)
+        print("took: {}".format((stop-start)*1000.0))
+
+for finishedN in res:
+    print("{} took: {}".format(finishedN, mean(res[finishedN])))
+
+'''
 minx = 0
 miny = 0
 maxx = 15
@@ -87,7 +131,7 @@ maxy = 15
 readpol = {}  # Make empty dict
 makeDict(readPoints('lines.txt'), readpol)
 
-edges = makeEdgeList(readPoints('lines.txt'))
+edges = makeEdgeList(readPoints('test_input_2_on_vert_line.txt'))
 
 randpol = {}
 #makeDict(poly.makePolygon(8, 0, 15), randpol)
@@ -99,8 +143,9 @@ plt.xlim([minx, maxx])
 #connectPoints(readpol, "r")
 # connectPoints(randpol, "b")
 
-vd = ri.decompose_basic(edges)
+vd = ps.decompose(edges)
 
 showDecomp(vd)
 
 plt.show()
+'''

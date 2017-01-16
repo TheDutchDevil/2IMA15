@@ -1,5 +1,5 @@
 from enum import Enum
-import math as math
+
 
 class Vector:
     """Represents a 2D vector."""
@@ -109,16 +109,10 @@ class Edge:
         Returns the y-value of the corresponding x-value on this edge.
         None is returned if this edge has no slope or the corresponding x-value is not part of this edge.
         """
-        epsilon = 0.0001
 
         if self.getStartVertex().x <= x and x <= self.getEndVertex().x and self.slope() is not None:
             y_value = self.slope() * (x - self.getStartVertex().x) + self.getStartVertex().y
 
-            # If the y-value is almost an integer, then round it.
-            if abs(y_value % 1) < epsilon:
-                y_value = math.floor(y_value)
-            elif abs((y_value + epsilon) % 1) < epsilon:
-                y_value = math.ceil(y_value + 1)
 
             return y_value
         else: return None
