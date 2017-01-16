@@ -106,6 +106,8 @@ def makeRectangloid(x, y, size, general=0):
 		if(x>size or y>size):
 			print("Size too small!")
 			return []
+	elif(general==2):
+		lastx=-1
 
 	for i in range(1, y, 1):
 		ny = random.randrange((i-1)*size,(i)*size)
@@ -117,6 +119,12 @@ def makeRectangloid(x, y, size, general=0):
 				ypool1.remove(ny)
 			else:
 				ypool2.remove(ny)
+		elif(general==2):
+			while True:
+				nx = random.randrange(0,size)
+				if(nx != lastx):
+					break
+			lastx = nx
 		else:
 			nx = random.randrange(0,size)
 		
@@ -150,6 +158,12 @@ def makeRectangloid(x, y, size, general=0):
 					if(ny in ypool2):
 						break
 				ypool2.remove(ny)
+		elif(general==2):
+			while True:
+				nx = (x-1)*size + random.randrange(0,size)
+				if(nx != lastx):
+					break
+			lastx = nx
 		else:
 			nx =(x-1)*size + random.randrange(0,size)
 			ny = random.randrange((i-1)*size,(i)*size)
@@ -191,9 +205,8 @@ def makeRectangloid(x, y, size, general=0):
 
 
 
-def writePoints(poly): #Writes a list poly at [output]_#####.txt with # some random characters. Could technically overwrite an older one I guess, but not likely
+def writePoints(poly, output='filename'): #Writes a list poly at [output]_#####.txt with # some random characters. Could technically overwrite an older one I guess, but not likely
 	loc = 'E:\\2IMA15\\' #Change as needed, remember to put \\ at the end
-	output='polygon' 
 	stuff = "".join(random.choice(string.hexdigits) for _ in range(5)) #Random suffix
 	print("Saving "+loc+output+"_"+stuff+".txt ...")
 

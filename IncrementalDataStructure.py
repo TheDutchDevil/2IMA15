@@ -102,10 +102,7 @@ class TrapezoidSearchStructure:
         matches = set()
 
         if isinstance(node, XNode):
-            if vertex.x == node.vertex().x:
-                matches |= self.left.point_location_query(vertex) \
-                    | self.right.point_location_query(vertex)
-            if vertex.x < node.vertex().x:
+            if vertex.x <= node.vertex().x:
                 matches |= self.left.point_location_query(vertex)
             else:
                 matches |= self.right.point_location_query(vertex)
@@ -356,6 +353,10 @@ class Trapezoid:
         bottom_int = bottom.intersects(edge)
         left_int = False if left is None else left.intersects(edge)
 
+        # There are two intersections opposite of each other.
+        if (right_int and left_int) or (top_int and bottom_int):
+            return 2
+
         # Subtract the vertex intersections as these are also included in the edge intersections.
         return (top_int + right_int + bottom_int + left_int) - vertex_ints
 
@@ -522,6 +523,9 @@ class Trapezoid:
         else:
             # The edge crosses this whole trapezoid. Split this trapezoid horizontally.
             # First determine the left- and right vertex of the top and bottom trapezoid.
+            if self.leftp.isVertexOf(edge):
+                leftp_t = self.leftp
+                leftp_b = self.leftp
             if self.leftp.liesAbove(edge):
                 leftp_t = self.leftp
                 leftp_b = Vertex(self.leftp.x, self.bottom.getCorrespondingYValue(self.leftp.x))
@@ -529,7 +533,10 @@ class Trapezoid:
                 leftp_t = Vertex(self.leftp.x, self.top.getCorrespondingYValue(self.leftp.x))
                 leftp_b = self.leftp
 
-            if self.rightp.liesAbove(edge):
+            if self.rightp.isVertexOf(edge):
+                rightp_t = self.rightp
+                rightp_b = self.rightp
+            elif self.rightp.liesAbove(edge):
                 rightp_t = self.rightp
                 rightp_b = Vertex(self.rightp.x, self.bottom.getCorrespondingYValue(self.rightp.x))
             else:
@@ -900,3 +907,18 @@ class TrapezoidalDecomposition:
         TrapezoidSplit.merge(t_splitted)
 
         return t_splitted
+
+"""Debug function"""
+def contains_trapezoid_with_leftp(t_splitted, vertex):
+    for trapezoid in t_splitted:
+        leftps = [trapezoid.top.leftp, trapezoid.bottom.leftp]
+
+        if trapezoid.left is not None:
+            leftps.append(trapezoid.left.leftp)
+        if trapezoid.right is not None:
+            leftps.append(trapezoid.right.leftp)
+
+        if vertex in leftps:
+            return True
+
+    return False

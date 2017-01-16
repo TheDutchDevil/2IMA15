@@ -1,9 +1,8 @@
 from enum import Enum
-
+import math as math
 
 class Vector:
     """Represents a 2D vector."""
-
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -18,11 +17,11 @@ class Vector:
 
     def squared_length(self):
         """Returns the squared length of the vector."""
-        return self.x ** 2 + self.y ** 2
-
+        return self.x**2 + self.y**2
 
 # Represents an edge from p1 to p2
 class Edge:
+
     # insideOn captures on what side of the edge the inside of the polygon lies. Can be left, right or both (for edges
     # that are part of the decomposition)
     def __init__(self, p1, p2, insideOn):
@@ -67,31 +66,31 @@ class Edge:
 
     def isRightToLeft(self):
         return self.p1.x > self.p2.x
-
+    
     def asVector(self):
         """Returns a vector representation of this edge."""
         return Vector(self.getEndVertex().x - self.getStartVertex().x, self.getEndVertex().y - self.getStartVertex().y)
-
+    
     def intersects(self, edge):
         """Returns true of this edge intersects with the provided edge."""
         p = self.getStartVertex()
         r = self.asVector()
-
+        
         q = edge.getStartVertex()
         s = edge.asVector()
-
+        
         if r.cross(s) == 0:
             return False
         else:
             # Define the vector between the start point p and q.
             pq = Vector(q.x - p.x, q.y - p.y)
-
+        
             # This edge has line segment p + tr
             t = pq.cross(s) / r.cross(s)
-
+            
             # The provided edge has line segment q + us
             u = pq.cross(r) / r.cross(s)
-
+            
             return 0 <= t <= 1 and 0 <= u <= 1
 
     def slope(self):
@@ -101,16 +100,28 @@ class Edge:
         else:
             return (self.getStartVertex().y - self.getEndVertex().y) / (self.getStartVertex().x - self.getEndVertex().x)
 
+    def is_vertical(self):
+        """Returns true if this edge is vertical. Otherwise false is returned."""
+        return self.slope() == 0
+
     def getCorrespondingYValue(self, x):
         """
         Returns the y-value of the corresponding x-value on this edge.
         None is returned if this edge has no slope or the corresponding x-value is not part of this edge.
         """
-        if self.getStartVertex().x <= x and x <= self.getEndVertex().x:
-            return self.slope() * (
-            x - self.getStartVertex().x) + self.getStartVertex().y if self.slope() is not None else None
-        else:
-            return None
+        epsilon = 0.0001
+
+        if self.getStartVertex().x <= x and x <= self.getEndVertex().x and self.slope() is not None:
+            y_value = self.slope() * (x - self.getStartVertex().x) + self.getStartVertex().y
+
+            # If the y-value is almost an integer, then round it.
+            if abs(y_value % 1) < epsilon:
+                y_value = math.floor(y_value)
+            elif abs((y_value + epsilon) % 1) < epsilon:
+                y_value = math.ceil(y_value + 1)
+
+            return y_value
+        else: return None
 
     def lies_above(self, edge):
         """Returns true if this edge lies above the provided edge."""
@@ -120,7 +131,6 @@ class Edge:
         """Returns true if this edge has a common vertex with the provided edge."""
         return self.p1 == edge.p1 or self.p1 == edge.p2 or \
                self.p2 == edge.p1 or self.p2 == edge.p2
-
 
 class Vertex:
     def __init__(self, x, y):
@@ -169,13 +179,11 @@ class Vertex:
             dot_product = v_v.dot(v_e)
 
             return dot_product >= 0 and dot_product < v_e.squared_length()
-        else:
-            return False
+        else: return False
 
     def isVertexOf(self, edge):
         """Returns true if this vertex is one of the edge its endpoints."""
         return edge.p1 == self or edge.p2 == self
-
 
 # Used for the sweep line
 class StatusKey:
