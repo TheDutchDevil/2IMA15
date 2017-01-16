@@ -2,6 +2,7 @@
 A module containing functions and classes related to the randomized incremental algorithm
 that creates a trapezoidal deconstruction of a simple polygon.
 """
+import gc
 import math as math
 from math import floor, sqrt
 from random import shuffle
@@ -46,18 +47,23 @@ def decompose_basic(edges):
     r = ds.BoundingBox.around_edges(edges)
     edges = randomize(edges)
 
-    print(edges)
+    #print(edges)
 
     d = ds.TrapezoidSearchStructure.from_bounding_box(r)
 
-    for edge in edges:
+    for i in range(0, len(edges)):
+        edge = edges[i]
+
         if edge.is_vertical():
             raise ValueError("Vertical edges are not supported. Edge: {}".format(edge))
 
         t_new = ds.TrapezoidalDecomposition.insert(d, edge)
         ds.TrapezoidSearchStructure.insert(t_new, edge)
 
-    return [l.trapezoid() for l in d.get_leafs()]
+        if i % 1000 == 0:
+            gc.collect()
+
+    #return [l.trapezoid() for l in d.get_leafs()]
 
 def log(value):
     """Returns the result of the logarithm of the provided value with base 2."""
@@ -88,6 +94,9 @@ def trace(edges, ss_d):
             if edges[0].p1.x > edges[0].p2.x and t_leaf.trapezoid().top.p1 == vertex:
                 t_prev = t_leaf.trapezoid()
                 break
+            if t_leaf.trapezoid().get_number_of_intersections(edges[0]) == 2:
+                t_prev = t_leaf.trapezoid()
+                break
 
         # If no trapezoid is found, then take the first.
         t_prev = t_leafs[0].trapezoid()
@@ -104,40 +113,51 @@ def trace(edges, ss_d):
 
         if not t_prev.contains_vertex(vertex):
             if t_prev.top == edge_cur:
+                vert_map[vertex] = t_prev.ref_nodes()[0]
+                edge_prev = edge_cur
+
                 for neighbor_right in t_prev.neighbors_right:
                     for above in neighbor_right.neighbors_left:
                         if above.bottom == t_prev.top:
                             t_prev = above
                             break
+
+                continue
             elif t_prev.bottom == edge_cur:
                 for neighbor_left in t_prev.neighbors_left:
                     for below in neighbor_left.neighbors_right:
                         if below.top == t_prev.bottom:
                             t_prev = below
                             break
-            elif t_prev.left().intersects(edge_prev):
+            elif t_prev.left() is not None and t_prev.left().intersects(edge_prev):
                 neighbors = list(t_prev.neighbors_left)
 
                 while len(neighbors) > 0:
                     neighbor = neighbors.pop()
 
-                    if neighbor.contains_vertex(vertex) or vertex.lies_on(neighbor.right()):
+                    lies_on_right = vertex.lies_on(neighbor.right()) \
+                        if neighbor.right() is not None else neighbor.rightp == vertex
+
+                    if neighbor.contains_vertex(vertex) or lies_on_right:
                         t_prev = neighbor
                         break
 
-                    if neighbor.left().intersects(edge_prev):
+                    if neighbor.left() is not None and neighbor.left().intersects(edge_prev):
                         neighbors = list(neighbor.neighbors_left)
-            elif t_prev.right().intersects(edge_prev):
+            elif t_prev.right() is not None and t_prev.right().intersects(edge_prev):
                 neighbors = list(t_prev.neighbors_right)
 
                 while len(neighbors) > 0:
                     neighbor = neighbors.pop()
 
-                    if neighbor.contains_vertex(vertex) or vertex.lies_on(neighbor.left()):
+                    lies_on_left = vertex.lies_on(neighbor.left()) \
+                        if neighbor.left() is not None else neighbor.leftp == vertex
+
+                    if neighbor.contains_vertex(vertex) or lies_on_left:
                         t_prev = neighbor
                         break
 
-                    if neighbor.right().intersects(edge_prev):
+                    if neighbor.right() is not None and neighbor.right().intersects(edge_prev):
                         neighbors = list(neighbor.neighbors_right)
 
         vert_map[vertex] = t_prev.ref_nodes()[0]
@@ -149,7 +169,8 @@ def decompose_improved(edges):
 
     r = ds.BoundingBox.around_edges(edges)
     #edges_rand = randomize(edges)
-    edges_rand = [Edge(Vertex(6, 9), Vertex(10, 6), Direction.Undefined), Edge(Vertex(5, 6), Vertex(2, 8), Direction.Undefined), Edge(Vertex(1, 4), Vertex(4, 4), Direction.Undefined), Edge(Vertex(2, 8), Vertex(6, 9), Direction.Undefined), Edge(Vertex(4, 4), Vertex(5, 6), Direction.Undefined), Edge(Vertex(3, 1), Vertex(1, 4), Direction.Undefined), Edge(Vertex(10, 6), Vertex(11, 2), Direction.Undefined), Edge(Vertex(7, 1), Vertex(3, 1), Direction.Undefined), Edge(Vertex(9, 3), Vertex(8, 5), Direction.Undefined), Edge(Vertex(8, 5), Vertex(7, 1), Direction.Undefined), Edge(Vertex(11, 2), Vertex(9, 3), Direction.Undefined)]
+    #edges_rand = [Edge(Vertex(7, 1), Vertex(3, 1), Direction.Undefined), Edge(Vertex(2, 8), Vertex(6, 9), Direction.Undefined), Edge(Vertex(6, 9), Vertex(10, 6), Direction.Undefined), Edge(Vertex(10, 6), Vertex(11, 2), Direction.Undefined), Edge(Vertex(5, 6), Vertex(2, 8), Direction.Undefined), Edge(Vertex(3, 1), Vertex(1, 4), Direction.Undefined), Edge(Vertex(11, 2), Vertex(9, 3), Direction.Undefined), Edge(Vertex(1, 4), Vertex(4, 4), Direction.Undefined), Edge(Vertex(8, 5), Vertex(7, 1), Direction.Undefined), Edge(Vertex(9, 3), Vertex(8, 5), Direction.Undefined), Edge(Vertex(4, 4), Vertex(5, 6), Direction.Undefined)]
+    edges_rand = [Edge(Vertex(4, 4), Vertex(5, 6), Direction.Undefined), Edge(Vertex(3, 1), Vertex(1, 4), Direction.Undefined), Edge(Vertex(10, 6), Vertex(11, 2), Direction.Undefined), Edge(Vertex(1, 4), Vertex(4, 4), Direction.Undefined), Edge(Vertex(7, 1), Vertex(3, 1), Direction.Undefined), Edge(Vertex(5, 6), Vertex(2, 8), Direction.Undefined), Edge(Vertex(8, 5), Vertex(7, 1), Direction.Undefined), Edge(Vertex(9, 3), Vertex(8, 5), Direction.Undefined), Edge(Vertex(11, 2), Vertex(9, 3), Direction.Undefined), Edge(Vertex(6, 9), Vertex(10, 6), Direction.Undefined), Edge(Vertex(2, 8), Vertex(6, 9), Direction.Undefined)]
 
     print(edges_rand)
 
@@ -178,9 +199,6 @@ def decompose_improved(edges):
 
 def _decompose_improved_insert(vertex_trace, edge):
     """Inserts the provided edge into the structures D and T using the provided trace."""
-    if edge.p1 == Vertex(2, 8):
-        print("Found")
-
     if edge.is_vertical():
         raise ValueError("Vertical edges are not supported. Edge: {}".format(edge))
 

@@ -329,22 +329,13 @@ class Trapezoid:
         bottom_left = bottom.getStartVertex()
         bottom_right = bottom.getEndVertex()
 
-        vertices = []
-
-        if top_left.lies_on(edge):
-            vertices.append(top_left)
-
-        if not top_right in vertices and top_right.lies_on(edge):
-            vertices.append(top_right)
-
-        if left is not None and not bottom_left in vertices and bottom_left.lies_on(edge):
-            vertices.append(bottom_left)
-
-        if right is not None and not bottom_right in vertices and bottom_right.lies_on(edge):
-            vertices.append(bottom_right)
+        top_left_int = top_left.lies_on(edge)
+        top_right_int = top_right.lies_on(edge)
+        bottom_left_int = left is not None and top_left != bottom_left and bottom_left.lies_on(edge)
+        bottom_right_int = right is not None and top_right != bottom_right and bottom_right.lies_on(edge)
 
         # Determine the number of vertex intersections.
-        vertex_ints = len(vertices)
+        vertex_ints = top_left_int + top_right_int + bottom_left_int + bottom_right_int
 
         if vertex_ints == 2:
             # There are two vertex intersections. There cannot be any more.
@@ -358,6 +349,14 @@ class Trapezoid:
 
         # There are two intersections opposite of each other.
         if (right_int and left_int) or (top_int and bottom_int):
+            return 2
+        elif right_int and (top_left_int or bottom_left_int):
+            return 2
+        elif left_int and (top_right_int or bottom_right_int):
+            return 2
+        elif top_int and (bottom_left_int or bottom_right_int):
+            return 2
+        elif bottom_int and (top_left_int or top_right_int):
             return 2
 
         # Subtract the vertex intersections as these are also included in the edge intersections.

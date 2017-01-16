@@ -1,5 +1,6 @@
 from enum import Enum
-
+import math as math
+import sys
 
 class Vector:
     """Represents a 2D vector."""
@@ -19,12 +20,20 @@ class Vector:
         """Returns the squared length of the vector."""
         return self.x**2 + self.y**2
 
+class Direction(Enum):
+    Left = 1
+    Right = 2
+    Both = 3
+
+    """The direction of the edge is undefined. The direction is not known."""
+    Undefined = 9
+
 # Represents an edge from p1 to p2
 class Edge:
 
     # insideOn captures on what side of the edge the inside of the polygon lies. Can be left, right or both (for edges
     # that are part of the decomposition)
-    def __init__(self, p1, p2, insideOn):
+    def __init__(self, p1, p2, insideOn=Direction.Undefined):
         self.p1 = p1
         self.p2 = p2
         self.insideOn = insideOn
@@ -70,27 +79,51 @@ class Edge:
     def asVector(self):
         """Returns a vector representation of this edge."""
         return Vector(self.getEndVertex().x - self.getStartVertex().x, self.getEndVertex().y - self.getStartVertex().y)
-    
+
+    def get_intersection(self, edge):
+        p = self.getStartVertex()
+        r = self.asVector()
+
+        q = edge.getStartVertex()
+        s = edge.asVector()
+
+        if r.cross(s) == 0:
+            return None
+        else:
+            # Define the vector between the start point p and q.
+            pq = Vector(q.x - p.x, q.y - p.y)
+
+            # This edge has line segment p + tr
+            t = pq.cross(s) / r.cross(s)
+
+            # The provided edge has line segment q + us
+            u = pq.cross(r) / r.cross(s)
+
+            if 0 <= t <= 1 and 0 <= u <= 1:
+                return Vertex(p.x + (t * r.x), p.y + (t * r.y))
+            else:
+                return None
+
     def intersects(self, edge):
         """Returns true of this edge intersects with the provided edge."""
         p = self.getStartVertex()
         r = self.asVector()
-        
+
         q = edge.getStartVertex()
         s = edge.asVector()
-        
+
         if r.cross(s) == 0:
             return False
         else:
             # Define the vector between the start point p and q.
             pq = Vector(q.x - p.x, q.y - p.y)
-        
+
             # This edge has line segment p + tr
             t = pq.cross(s) / r.cross(s)
-            
+
             # The provided edge has line segment q + us
             u = pq.cross(r) / r.cross(s)
-            
+
             return 0 <= t <= 1 and 0 <= u <= 1
 
     def slope(self):
@@ -109,13 +142,10 @@ class Edge:
         Returns the y-value of the corresponding x-value on this edge.
         None is returned if this edge has no slope or the corresponding x-value is not part of this edge.
         """
+        edge = Edge(Vertex(x, -sys.maxsize), Vertex(x, sys.maxsize))
+        intersection = self.get_intersection(edge)
 
-        if self.getStartVertex().x <= x and x <= self.getEndVertex().x and self.slope() is not None:
-            y_value = self.slope() * (x - self.getStartVertex().x) + self.getStartVertex().y
-
-
-            return y_value
-        else: return None
+        return intersection.y if intersection is not None else None
 
     def lies_above(self, edge):
         """Returns true if this edge lies above the provided edge."""
@@ -219,12 +249,3 @@ class StatusKey:
 
     def __repr__(self):
         return "(start: {}, dxdy: {})".format(self.startAtY, self.dxdy)
-
-
-class Direction(Enum):
-    Left = 1
-    Right = 2
-    Both = 3
-
-    """The direction of the edge is undefined. The direction is not known."""
-    Undefined = 9
