@@ -1,4 +1,6 @@
 import os
+from statistics import mean
+
 import matplotlib as sdf
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
@@ -82,6 +84,16 @@ def readPoints(openfile):
         f.closed
     return content
 
+baseN = 700
+'''
+for i in range(0,7):
+    for j in range(0,3):
+        n = baseN*pow(2, i)
+        poly.writePoints(poly.makeRectangloid(int(n/4 + 1), int(n/4 + 1), int(n * 1.25), general=2),
+                         "testSuite/testSuite{}_{}".format(n, j))
+
+'''
+
 
 res = {}
 
@@ -100,13 +112,15 @@ for filename in os.listdir("testsuite"):
     for i in range(0, 10):
         start = time.time()
 
-        ps.decompose(edges)
+        ri.decompose_basic(edges)
 
         stop = time.time()
 
         res[n].append((stop-start)*1000.0)
+        print("took: {}".format((stop-start)*1000.0))
 
-print("Done")
+for finishedN in res:
+    print("{} took: {}".format(finishedN, mean(res[finishedN])))
 
 '''
 minx = 0

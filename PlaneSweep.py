@@ -9,7 +9,6 @@ def decompose(edges):
     # Build event queue
 
     evtQ = builEventQueue(edges)
-    printEventQueue(evtQ)
 
     # empty status
 
@@ -25,7 +24,7 @@ def decompose(edges):
         edgePoints = {}
 
         if len(evtT[1]) > 2:
-            print("Degenerate case, multiple vertices on a vertical line!!!111!!!!1!!1!")
+            None # print("Degenerate case, multiple vertices on a vertical line!!!111!!!!1!!1!")
 
         for evt in evtT[1]:
 
@@ -42,6 +41,7 @@ def decompose(edges):
                 status.remove(evt.edge.statusKeyForEdge())
 
         attemptAddEdges(status, realX, edgePoints, vd)
+
     # build deco
 
     return vd
