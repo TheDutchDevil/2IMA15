@@ -2,9 +2,11 @@ import os
 import matplotlib as sdf
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+import time
+
 import PolygonCreator as poly
 import PlaneSweep as ps
-import RandomizedIncremental as ri 
+import RandomizedIncremental as ri
 from DataStructures import Vertex, Edge, Direction
 
 
@@ -14,8 +16,8 @@ def writeLine(line, i):
     else:
         f.write(str(line) + " ")
 
-def makeEdgeList(vertices):
 
+def makeEdgeList(vertices):
     prevVertex = None
 
     edges = []
@@ -33,9 +35,10 @@ def makeEdgeList(vertices):
 
             prevVertex = vertex
 
-    edges.append(Edge(edges[len(edges)-1].p2, edges[0].p1, Direction.Right))
+    edges.append(Edge(edges[len(edges) - 1].p2, edges[0].p1, Direction.Right))
 
     return edges
+
 
 def makeDict(cont, dest):  # Reads all lines from 'cont' and fits them into dict 'dest'
     mx = 0
@@ -63,12 +66,13 @@ def connectPoints(p, c):  # Connects all points in p and plots them in color c
         plt.plot(p[i][0], p[i][1], c + "o")
         plt.plot(p[n][0], p[n][1], c + "o")  # Points and lines use MATLAB syntax
 
+
 def showDecomp(p):
     for tuple in p.edges:
         edge = tuple[0]
         plt.plot([edge.getStartVertex().x, edge.getEndVertex().x],
-                 [edge.getStartVertex().y, edge.getEndVertex().y], linestyle="-", linewidth = 2, color="r" if tuple[1] else "g")
-
+                 [edge.getStartVertex().y, edge.getEndVertex().y], linestyle="-", linewidth=2,
+                 color="r" if tuple[1] else "g")
 
 
 def readPoints(openfile):
@@ -79,6 +83,32 @@ def readPoints(openfile):
     return content
 
 
+res = {}
+
+for filename in os.listdir("testsuite"):
+    filename = "testsuite/" + filename
+    edges = makeEdgeList(readPoints(filename))
+
+    print("Doing file {}".format(filename))
+
+    with open(filename, 'r') as f:
+        n = int(f.readline())
+
+    if not n in res:
+        res[n] = []
+
+    for i in range(0, 10):
+        start = time.time()
+
+        ps.decompose(edges)
+
+        stop = time.time()
+
+        res[n].append((stop-start)*1000.0)
+
+print("Done")
+
+'''
 minx = 0
 miny = 0
 maxx = 15
@@ -104,3 +134,4 @@ vd = ps.decompose(edges)
 showDecomp(vd)
 
 plt.show()
+'''

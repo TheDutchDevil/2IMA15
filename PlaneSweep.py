@@ -42,9 +42,6 @@ def decompose(edges):
                 status.remove(evt.edge.statusKeyForEdge())
 
         attemptAddEdges(status, realX, edgePoints, vd)
-
-        print("Total status size is {}".format(len(status)))
-
     # build deco
 
     return vd
