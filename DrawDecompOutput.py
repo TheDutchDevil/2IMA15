@@ -84,17 +84,18 @@ def readPoints(openfile):
         f.closed
     return content
 
+
 baseN = 700
 '''
-for i in range(0,7):
+for i in range(1,33):
     for j in range(0,3):
-        n = baseN*pow(2, i)
+        n = baseN*i
         poly.writePoints(poly.makeRectangloid(int(n/4 + 1), int(n/4 + 1), int(n * 1.25), general=2),
                          "testSuite/testSuite{}_{}".format(n, j))
 
 
 
-
+'''
 res = {}
 
 for filename in os.listdir("testsuite"):
@@ -122,6 +123,7 @@ for filename in os.listdir("testsuite"):
 for finishedN in res:
     print("{} took: {}".format(finishedN, mean(res[finishedN])))
 
+
 '''
 minx = 0
 miny = 0
@@ -147,3 +149,4 @@ vd = ps.decompose(edges)
 showDecomp(vd)
 
 plt.show()
+'''
