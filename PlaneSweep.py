@@ -36,6 +36,28 @@ def decompose(edges):
 
             if evt.type == EventType.Insert:
                 status.insert(evt.edge.statusKeyForEdge(), evt.edge)
+
+                try:
+                    upper = status.succ_item(evt.edge.statusKeyForEdge())
+                except KeyError:
+                    None
+
+                try:
+                    lower = status.prev_item(evt.edge.statusKeyForEdge())
+                except KeyError:
+                    None
+
+                upper = None
+                lower = None
+
+                if not upper is None:
+                    if upper[1].pointAtEdge(realX) < evt.edge.pointAtEdge(realX):
+                        print("Degenerate!")
+                if not lower is None:
+                    if lower[1].pointAtEdge(realX) > evt.edge.pointAtEdge(realX):
+                        print("Degenerate!")
+
+
                 vd.addEdge(evt.edge)
             if evt.type == EventType.Removal:
                 status.remove(evt.edge.statusKeyForEdge())
@@ -78,6 +100,11 @@ def attemptAddEdges(status, realX, edgePoints, vd):
         if lower is not None and ((lower[1].isRightToLeft() and lower[1].insideOn == Direction.Right) or
                                       (lower[1].isLeftToRight() and lower[1].insideOn == Direction.Left)):
             vd.addVertEdge(Edge(edge.pointAtEdge(realX), lower[1].pointAtEdge(realX), Direction.Both))
+
+    for key in edgePoints:
+        edge = edgePoints[key]
+        if edge.getEndVertex().x == realX:
+            status.remove(edge.statusKeyForEdge())
 
 
 def builEventQueue(edges):

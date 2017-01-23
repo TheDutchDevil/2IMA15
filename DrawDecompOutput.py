@@ -92,7 +92,7 @@ for i in range(0,7):
         poly.writePoints(poly.makeRectangloid(int(n/4 + 1), int(n/4 + 1), int(n * 1.25), general=2),
                          "testSuite/testSuite{}_{}".format(n, j))
 
-'''
+
 
 
 res = {}
@@ -112,7 +112,7 @@ for filename in os.listdir("testsuite"):
     for i in range(0, 10):
         start = time.time()
 
-        ri.decompose_basic(edges)
+        ps.decompose(edges)
 
         stop = time.time()
 
@@ -125,14 +125,13 @@ for finishedN in res:
 '''
 minx = 0
 miny = 0
-maxx = 15
-maxy = 15
+maxx = 10**8
+maxy = 10**8
 
 readpol = {}  # Make empty dict
 makeDict(readPoints('lines.txt'), readpol)
 
 edges = makeEdgeList(readPoints('test_input_2_on_vert_line.txt'))
-
 randpol = {}
 #makeDict(poly.makePolygon(8, 0, 15), randpol)
 
@@ -148,4 +147,3 @@ vd = ps.decompose(edges)
 showDecomp(vd)
 
 plt.show()
-'''
