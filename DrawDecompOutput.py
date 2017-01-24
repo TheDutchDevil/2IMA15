@@ -4,7 +4,9 @@ from statistics import mean
 import matplotlib as sdf
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+from pympler.tracker import SummaryTracker
 import time
+import gc
 
 import PolygonCreator as poly
 import PlaneSweep as ps
@@ -22,7 +24,7 @@ def writeLine(line, i):
 def makeEdgeList(vertices):
     prevVertex = None
 
-    edges = []
+    edgesTemp = []
 
     for text in vertices:
         splitLine = text.split()
@@ -33,13 +35,13 @@ def makeEdgeList(vertices):
             vertex = Vertex(int(splitLine[0]), int(splitLine[1]))
 
             if prevVertex is not None:
-                edges.append(Edge(prevVertex, vertex, Direction.Right))
+                edgesTemp.append(Edge(prevVertex, vertex, Direction.Right))
 
             prevVertex = vertex
 
-    edges.append(Edge(edges[len(edges) - 1].p2, edges[0].p1, Direction.Right))
+    edgesTemp.append(Edge(edgesTemp[len(edgesTemp) - 1].p2, edgesTemp[0].p1, Direction.Right))
 
-    return edges
+    return edgesTemp
 
 
 def makeDict(cont, dest):  # Reads all lines from 'cont' and fits them into dict 'dest'
@@ -84,18 +86,38 @@ def readPoints(openfile):
         f.closed
     return content
 
+def doComp(res, edges):
+     for i in range(0, 10):
+        start = time.time()
+
+        ri.decompose_basic(edges)
+
+        stop = time.time()
+
+        res[n].append((stop - start) * 1000.0)
+        print("took: {}".format((stop - start) * 1000.0))
+
+
+
 baseN = 700
 '''
-for i in range(0,7):
+for i in range(1,33):
     for j in range(0,3):
-        n = baseN*pow(2, i)
+        n = baseN*i
         poly.writePoints(poly.makeRectangloid(int(n/4 + 1), int(n/4 + 1), int(n * 1.25), general=2),
                          "testSuite/testSuite{}_{}".format(n, j))
 
+
+
 '''
-
-
 res = {}
+
+gc.enable()
+
+tracker = SummaryTracker()
+
+
+trackVar = 0
 
 for filename in os.listdir("testsuite"):
     filename = "testsuite/" + filename
@@ -109,15 +131,15 @@ for filename in os.listdir("testsuite"):
     if not n in res:
         res[n] = []
 
-    for i in range(0, 10):
-        start = time.time()
+    doComp(res, edges)
 
-        ri.decompose_basic(edges)
 
-        stop = time.time()
+    if trackVar % 5 == 0 and not trackVar == 0:
+        gc.collect()
 
-        res[n].append((stop-start)*1000.0)
-        print("took: {}".format((stop-start)*1000.0))
+    edges.clear()
+
+    trackVar += 1
 
 for finishedN in res:
     print("{} took: {}".format(finishedN, mean(res[finishedN])))
@@ -125,14 +147,13 @@ for finishedN in res:
 '''
 minx = 0
 miny = 0
-maxx = 15
-maxy = 15
+maxx = 10**8
+maxy = 10**8
 
 readpol = {}  # Make empty dict
 makeDict(readPoints('lines.txt'), readpol)
 
 edges = makeEdgeList(readPoints('test_input_2_on_vert_line.txt'))
-
 randpol = {}
 #makeDict(poly.makePolygon(8, 0, 15), randpol)
 
