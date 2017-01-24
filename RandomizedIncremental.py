@@ -63,7 +63,7 @@ def decompose_basic(edges):
         if i % 1000 == 0:
             gc.collect()
 
-    #return [l.trapezoid() for l in d.get_leafs()]
+    return [l.trapezoid() for l in d.get_leafs()]
 
 def log(value):
     """Returns the result of the logarithm of the provided value with base 2."""

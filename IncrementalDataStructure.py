@@ -7,18 +7,10 @@ from DataStructures import Direction, Vertex, Edge
 class Node:
     """A generic node."""
     def __init__(self, data):
-        self._parent = None
         self.data = data
 
     def __repr__(self):
         return "_[{}]".format(self.data)
-
-    def parent(self):
-        """
-        Returns the parent of this node in the structure.
-        If this node has no parent, then None is returned.
-        """
-        return self._parent
 
 class XNode(Node):
     """A x-node that contains a vertex."""
@@ -63,16 +55,8 @@ class TrapezoidSearchStructure:
         self.left = left
         self.right = right
 
-        # Override the parents.
-        self.root._parent = None
-
         if isinstance(self.root, TrapezoidLeaf):
-            self.root.trapezoid()._nodes.append(self)
-
-        if self.left is not None:
-            self.left.root._parent = self
-        if self.right is not None:
-            self.right.root._parent = self
+            self.root.trapezoid()._node = self
 
     @staticmethod
     def from_bounding_box(bounding_box):
@@ -87,11 +71,10 @@ class TrapezoidSearchStructure:
         Otherwise the existing search structure is altered.
         """
         for trapezoid in new_trapezoids:
-            t_nodes = trapezoid.original.ref_nodes()
+            t_node = trapezoid.original.ref_node()
 
-            for t_node in t_nodes:
-                tss = trapezoid.as_search_structure(edge)
-                t_node.replace(tss)
+            tss = trapezoid.as_search_structure(edge)
+            t_node.replace(tss)
 
     def point_location_query(self, vertex):
         """
@@ -123,30 +106,19 @@ class TrapezoidSearchStructure:
 
     def replace_left(self, tree):
         """Replaces the left child of this (sub-)tree."""
-        if self.left is not None:
-            self.left.root._parent = None
-
         self.left = tree
-        self.left.root._parent = self
 
     def replace_right(self, tree):
         """Replaces the right child of this (sub-)tree."""
-        if self.right is not None:
-            self.right.root._parent = None
-
         self.right = tree
-        self.right.root._parent = self
 
     def replace(self, tss):
         """Replaces this search structure with the provided one."""
         if isinstance(self.root, TrapezoidLeaf):
-            self.root.trapezoid()._nodes.remove(self)
+            self.root.trapezoid()._node = None
         if isinstance(tss.root, TrapezoidLeaf):
-            tss.root.trapezoid()._nodes.remove(tss)
-            tss.root.trapezoid()._nodes.append(self)
+            tss.root.trapezoid()._node = self
 
-        tss.root._parent = self.root._parent
-        self.root._parent = None
         self.root = tss.root
 
         self.replace_left(tss.left)
@@ -169,7 +141,7 @@ class TrapezoidSearchStructure:
 class Trapezoid:
     """A trapezoid defined by two vertices and two edges."""
     def __init__(self, leftp, rightp, top, bottom, neighbors_left, neighbors_right):
-        self._nodes = []
+        self._node = TrapezoidSearchStructure(TrapezoidLeaf(self))
         self.leftp = leftp
         self.rightp = rightp
         self.top = top
@@ -191,11 +163,11 @@ class Trapezoid:
     def __neq__(self, other):
         return not self == other
 
-    def ref_nodes(self):
+    def ref_node(self):
         """
         Returns the reference to the nodes that contains this trapezoid.
         """
-        return list(self._nodes)
+        return self._node
 
     def top_left(self):
         """Returns the left top vertex of the trapezoid."""
@@ -781,19 +753,19 @@ class TrapezoidSplit:
         """Returns the search structure for this trapezoid split."""
         sub_tree = TrapezoidSearchStructure(
             root=YNode(edge),
-            left=TrapezoidSearchStructure(TrapezoidLeaf(self.bottom)),
-            right=TrapezoidSearchStructure(TrapezoidLeaf(self.top)))
+            left=self.bottom.ref_node(),
+            right=self.top.ref_node())
 
         if self.right is not None:
             sub_tree = TrapezoidSearchStructure(
                 root=XNode(edge.getEndVertex()),
                 left=sub_tree,
-                right=TrapezoidSearchStructure(TrapezoidLeaf(self.right)))
+                right=self.right.ref_node())
 
         if self.left is not None:
             sub_tree = TrapezoidSearchStructure(
                 root=XNode(edge.getStartVertex()),
-                left=TrapezoidSearchStructure(TrapezoidLeaf(self.left)),
+                left=self.left.ref_node(),
                 right=sub_tree)
 
         return sub_tree
@@ -877,7 +849,9 @@ class TrapezoidalDecomposition:
             if neighbor.is_intersected_by(edge) or neighbor.contains_vertex(edge.getStartVertex()):
                 intersections.append(neighbor)
 
-                for neighbor_right in neighbor.neighbors_right:
+                neighbors_right = sorted(neighbor.neighbors_right, key=lambda n: n.top.getStartVertex().x)
+
+                for neighbor_right in neighbors_right:
                     if neighbor_right not in neighbors:
                         neighbors.append(neighbor_right)
 
